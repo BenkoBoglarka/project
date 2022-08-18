@@ -24,7 +24,8 @@ tobbfele modellt allit fel a betaplalt adatokbol es keszit hozzajuk konfuzio mat
 
 Csak pontosság, konfúziós mátrix, AUC és mondatok cimkézése minden modellre: 
 
-```DecisionTreeClassifier(random_state=0) : 0.9162412993039443
+```
+DecisionTreeClassifier(random_state=0) : 0.9162412993039443
 [[3821  186] 
  [ 175  128]]
 [0]
