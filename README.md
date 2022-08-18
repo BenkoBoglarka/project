@@ -25,44 +25,44 @@ tobbfele modellt allit fel a betaplalt adatokbol es keszit hozzajuk konfuzio mat
 Csak pontosság, konfúziós mátrix, AUC és mondatok cimkézése minden modellre: 
 
 ```
-DecisionTreeClassifier(random_state=0) : 0.9162412993039443
-[[3821  186] 
- [ 175  128]]
+DecisionTreeClassifier(random_state=0) : 0.924057355284121
+[[3371  127]
+ [ 159  109]]
 [0]
 [0]
 [0]
 [1]
-AUC:  0.688011738533474
-KNeighborsClassifier(n_neighbors=8) : 0.9338747099767981
-[[4003    4] 
- [ 281   22]]
+AUC:  0.6852049785378426
+KNeighborsClassifier(n_neighbors=8) : 0.9336165693043016
+[[3496    2]
+ [ 248   20]]
 [0]
 [0]
 [0]
 [0]
-AUC:  0.5358045038344613
-RandomForestClassifier(n_estimators=200, random_state=0) : 0.9394431554524362
-[[3938   69]
- [ 192  111]]
+AUC:  0.5370275551914526
+RandomForestClassifier(n_estimators=200, random_state=0) : 0.942113648433351
+[[3452   46]
+ [ 172   96]]
 [0]
 [0]
 [0]
 [1]
-AUC:  0.6745583842137645
-MultinomialNB() : 0.9401392111368909
-[[3970   37]
- [ 221   82]]
+AUC:  0.6725292917914714
+MultinomialNB() : 0.9410515135422198
+[[3483   15]
+ [ 207   61]]
 [0]
 [0]
 [0]
 [0]
-AUC:  0.6306966109638166
-LogisticRegression(random_state=0, solver='liblinear') : 0.9440835266821346
-[[3980   27]
- [ 214   89]]
+AUC:  0.6116618878164922
+LogisticRegression(random_state=0, solver='liblinear') : 0.9450345193839618
+[[3484   14]
+ [ 193   75]]
 [0]
 [0]
 [0]
 [0]
-AUC:  0.6434955824007658
+AUC:  0.637924229623751
 ```
