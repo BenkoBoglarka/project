@@ -1,3 +1,4 @@
+from typing import Any
 import pandas as pd 
 from tqdm import tqdm
 tqdm.pandas(desc="progress-bar")
@@ -12,161 +13,180 @@ from sklearn.ensemble import RandomForestClassifier
 import sklearn.metrics as metrics
 from sklearn.metrics import accuracy_score,precision_score,recall_score,confusion_matrix,roc_curve,classification_report, plot_confusion_matrix
 from sklearn.model_selection import train_test_split
-import xgboost as xgb 
-import numpy as np
-import gzip
 import datetime
-from datetime import date
-from nltk.tokenize import sent_tokenize, word_tokenize, TweetTokenizer
-import warnings
-import wget
-warnings.filterwarnings(action='ignore')
+import xgboost as xgb 
 import gensim
-from gensim.models import KeyedVectors
-import nltk
-import gensim.downloader as api
+import numpy as np
+from pyspark.ml import Pipeline
 
-# adatok betoltese
-adat_keszlet = pd.read_csv("feldolgozott_adat.csv")
+def vektorizacio_v1(adat_keszlet: pd.DataFrame):
+    """
+    Adatok felosztása, tokenizálása és vektorizálása
+    Verzió 1: CountVectorizer()
+    """
 
-# adatok cimkezesre
-# adat_teszt = pd.read_csv("teszt.txt", delimiter=';', names=['szoveg','cimke'])
-
-def modell_elemzes(adat_keszlet, modell_tipus):
-    # adatok felosztasa tanulo es teszt halmazra
-    # # forras: https://www.analyticsvidhya.com/blog/2021/07/performing-sentiment-analysis-with-naive-bayes-classifier/
     x= adat_keszlet['szoveg']
     y = adat_keszlet['cimke']
   
+    x,x_teszt, y, y_teszt = train_test_split(x,y, stratify=y, test_size=0.25, random_state=42)
 
-    # # # tokenizacio 
-    # # # forras: https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html
-    # # # forras: https://www.analyticsvidhya.com/blog/2021/07/performing-sentiment-analysis-with-naive-bayes-classifier/
-    # # vec = CountVectorizer(ngram_range=(1,2))
-    # # x = vec.fit_transform(x).toarray()
-    # # x_teszt = vec.transform(x_teszt).toarray()
-    
-    # # model = api.load('word2vec-google-news-300')
+    vec = CountVectorizer(ngram_range=(1,2))
+    x = vec.fit_transform(x).toarray()
+    x_teszt = vec.transform(x_teszt).toarray()
 
-    # # # url ="https://s3.amazonaws.com/dl4j-distribution/GoogleNews-vectors-negative300.bin.gz"
-    # # filename = wget.download(url)
-    # # f_in = gzip.open("GoogleNews-vectors-negative300.bin.gz",'rb')
-    # # f_out = open('GoogleNews-vectors-negative300.bin.gz', 'wb')
-    # # f_out.writelines(f_in)
-    # #model =gensim.models.keyedvectors.KeyedVectors.load_word2vec_format('https://s3.amazonaws.com/dl4j-distribution/GoogleNews-vectors-negative300.bin.gz',binary=True)
+    return x, y, x_teszt, y_teszt, vec
 
-    # # data = TweetTokenizer.tokenize(adat_keszlet)
+def vektorizacio_v2(adat_keszlet: pd.DataFrame):
+    """
+    Adatok felosztása, tokenizálása és vektorizálása
+    Verzió 2: Word2Vec()
+    """
 
+    x= adat_keszlet['szoveg']
+    y = adat_keszlet['cimke']
+   
     data = []
     for i in x:
         aaa = i.split(' ')
         data.append(aaa)
-    #print(data)s
-    buh   = gensim.models.Word2Vec(min_count=1, seed=42, vector_size=100)
-   
 
-
+    
+    buh   = gensim.models.Word2Vec(min_count=5, seed=1900, vector_size=200, window=4)
     buh.build_vocab(data)
     buh.train(data, total_examples=buh.corpus_count, epochs=buh.epochs)
+    words = set(buh.wv.index_to_key)
+    # x_vect_tanulo = []
+    # for ls in x:
+    #     for i in ls:
+    #         print(i)
+    #         if i in words:
+    #             x_vect_tanulo.append(buh.wv[i])
+    # x_vect_teszt = []
+    # for ls in x_teszt:
+    #     for i in ls:
+    #         if i in words:
+    #             x_vect_teszt.append(buh.wv[i])
+    # for i in x_vect_tanulo:
+    #     print(i)
+    # temp = []
+    # for v in x_vect_tanulo:
+    #     if v.size:
+    #         temp = pd.concat([temp, pd.Series(v.mean(axis=0))])
+    #     else:
+    #         temp = pd.concat([temp, pd.Series(v.mean(np.zeros(100, dtype=float)))])
+
+    # temp2 = []
+    # for v in x_vect_teszt:
+    #     if v.size:
+    #         temp2 = pd.concat([temp2, pd.Series(v.mean(axis=0))])
+    #     else:
+    #         temp2 = pd.concat([temp2, pd.Series(v.mean(np.zeros(100, dtype=float)))])
+    # for i, v in enumerate(x_vect_tanulo):
+    #     print(len(x.iloc[i]), len(v))
     temp = pd.DataFrame()
-    for i in x:
+
+    for i in data:
         kimi = pd.DataFrame()
-        for j in i.split(' '):
-            try:
-                word = buh.wv.get_vector(j)
-                kimi = kimi.append(pd.Series(word), ignore_index=True)
-            except:
-                kimi = kimi.append(pd.Series(0), ignore_index=True)
+        for j in i:
+            if j in words:
+                kimi = pd.concat([kimi, pd.Series(buh.wv[j])])
+            else:
+                kimi = pd.concat([kimi, pd.Series(0, )])
+
         ddd = kimi.mean()
-        temp = temp.append(ddd, ignore_index=True)
-    print(temp.shape)
+        temp = pd.concat([temp, pd.Series(ddd)])
 
     x,x_teszt, y, y_teszt = train_test_split(temp,y, stratify=y, test_size=0.25, random_state=42)
+    return x, y, x_teszt, y_teszt
 
-        
-    #vector = buh.wv['end']
-    # sims = buh.wv.most_similar('end', topn=10)
-    # print(len(buh.wv))
-    # print(len(y))
+def vektorizacio_v3(adat_keszlet: pd.DataFrame):
+    """
+    Adatok felosztása, tokenizálása és vektorizálása
+    Verzió 3: Doc2Vec()
+    """
 
-    #buh.most_similar(positive=['woman', 'king'], negative=['man'], topn=5)
-    # buh['good']
-    # for index,row in data:
-    #     model_vector = (np.mean([data[token] for token in row]))
+    x = adat_keszlet['szoveg']
+    y = adat_keszlet['cimke']
+   
+    data = []
+    for i in x:
+        aaa = i.split(' ')
+        data.append(aaa)
+    tagged_data = []
+    for i,d in enumerate(data):
+        tagged_data.append(gensim.models.doc2vec.TaggedDocument(d, [i]))
+    model = gensim.models.Doc2Vec(tagged_data,vector_size=100,min_count= 2)
+    model.build_vocab(tagged_data)
+    model.train(tagged_data, total_examples=model.corpus_count, epochs=model.epochs)
 
-    # data = []
-    # # for i in sent_tokenize(data):
-    # temp = []
-    #     # print(i)
-    # for i in x:
-    #     for j in word_tokenize(i):
-    #             temp.append(j.lower())
-    #     data.append(temp)
+    x_tanulo = []
+    for i in tagged_data:
+        heh = model.infer_vector(i.words)
+        x_tanulo.append(heh)
+ 
+    x,x_teszt, y, y_teszt = train_test_split(x_tanulo,y, stratify=y, test_size=0.25, random_state=42)
+    return x, y, x_teszt, y_teszt
 
-    # print(data)
-    # # print(data)
+def modell_felallitasa(modell_tipus, x,y,x_teszt,y_teszt):
+    """
+    A választott vectorizációval és típussal létre
+    hozzuk a modellt, majd leellenőrízzük az eredményt.
+    Konfúziós mátrixot és mutatószámokat számolunk rá.
+    """
 
 
-    # x = [xx for xx in x]
-    # def cala(x):
-    #     for i, list_of_words in enumerate(x):
-    #         yield gensim.models.doc2vec.TaggedDocument(list_of_words, [i])
-    # data = list(cala(x))
-    # model = gensim.models.Doc2Vec(min_count=1)
-    # model.build_vocab(data)
-
-    # modell felallitasa es pontossaganak kiirasa
-    # https://www.analyticsvidhya.com/blog/2021/07/performing-sentiment-analysis-with-naive-bayes-classifier/
-    # print(len(buh.wv.vectors[:len(y)]))
     modell = modell_tipus
     print("Start time ", datetime.datetime.now())
     modell.fit(x,y)
     pont = modell.score(x_teszt,y_teszt)
     print(modell_tipus, ":" ,pont)
-
-    # # konfuzio matrix 
-    # # forras: https://www.jcchouinard.com/confusion-matrix-in-scikit-learn/
+ 
     y_pred = modell.predict(x_teszt)    
     konfuzios_matrix = confusion_matrix(y_teszt,y_pred)
-    #class_report = classification_report(y_teszt,y_pred)
+    class_report = classification_report(y_teszt,y_pred)
     print(konfuzios_matrix)
+    print(class_report)
+
+    acc_pont = accuracy_score(y_teszt,y_pred)
+    pre_pont = precision_score(y_teszt,y_pred, average='micro')
+    rec_pont = recall_score(y_teszt,y_pred, average='micro')
+    print('Accuracy_score: ',acc_pont)
+    print('Precision_score: ',pre_pont)
+    print('Recall_score: ',rec_pont)
 
 
-    #print(class_report)
+def konfuzios_matrix_v2(modell, x_teszt,y_teszt):
+    """
+    Konfuziós mátrix felállítása ábrával együtt
+    """
+    
+    plot_confusion_matri = plot_confusion_matrix(modell,x_teszt, y_teszt, cmap=plt.cm.Blues)
+    szin = 'white'
+    plot_confusion_matri.ax_.set_title('Confusion Matrix', color=szin)
+    plt.xlabel('Predicted Label', color=szin)
+    plt.ylabel('True Label', color=szin)
+    plt.gcf().axes[0].tick_params(colors=szin)
+    plt.gcf().axes[1].tick_params(colors=szin)
+    plt.show()
 
-    # konfuzio martrix kirajzolasa (abraval)
-    # forras: https://www.jcchouinard.com/confusion-matrix-in-scikit-learn/
-    # plot_confusion_matri = plot_confusion_matrix(modell,x_teszt, y_teszt, cmap=plt.cm.Blues)
-    # szin = 'white'
-    # plot_confusion_matri.ax_.set_title('Confusion Matrix', color=szin)
-    # plt.xlabel('Predicted Label', color=szin)
-    # plt.ylabel('True Label', color=szin)
-    # plt.gcf().axes[0].tick_params(colors=szin)
-    # plt.gcf().axes[1].tick_params(colors=szin)
-    # plt.show(
 
-    # # modell pontozasa, kiertekelese
-    # # forras: https://www.analyticsvidhya.com/blog/2021/06/nlp-sentiment-analysis/
-    # acc_pont = accuracy_score(y_teszt,y_pred)
-    # pre_pont = precision_score(y_teszt,y_pred)
-    # rec_pont = recall_score(y_teszt,y_pred)
-    # print('Accuracy_score: ',acc_pont)
-    # print('Precision_score: ',pre_pont)
-    # print('Recall_score: ',rec_pont)
+def AUC_gorbe(modell, x_teszt, y_teszt):
+    """
+    AUC görbe felállítása
+    """
+    
+    y_pred = modell.predict(x_teszt)
+    fpr, tpr, threshold = metrics.roc_curve(y_teszt, y_pred)
+    roc_auc = metrics.roc_auc_score(y_teszt,y_pred)
+    print("AUC: ", roc_auc)
+    print(fpr,tpr,threshold)
 
-    # mondatok erzelmi toltesenek megadasa
-    #mondatok_cimkezese(modell,vec)
-    #adatkeszlet_cimkezese(adat_teszt,modell,vec)    
-    # AUC görbe 
-    # forras: https://www.codegrepper.com/code-examples/python/from+sklearn.metrics+import+roc_curve
-    # fpr, tpr, threshold = metrics.roc_curve(y_teszt, y_pred)
-    # forras: https://machinelearningmastery.com/roc-curves-and-precision-recall-curves-for-classification-in-python/
-    # roc_auc = metrics.roc_auc_score(y_teszt,y_pred)
-    # print("AUC: ", roc_auc)
-    # print(fpr,tpr,threshold)
 
-# pelda mondatok erzelmi toltetenek megadasa
 def mondatok_cimkezese(modell, vec):
+    """
+    Mondatok címkézése a tanult modell segítségével
+    """
+    
     a_mondat = modell.predict(vec.transform(['Love happiness cute relieve this app simply awesome!']))
     b_mondat = modell.predict(vec.transform(['Hate this app simply bad!'])) 
     c_mondat = modell.predict(vec.transform(['It is easy to use']))
@@ -176,13 +196,60 @@ def mondatok_cimkezese(modell, vec):
     print(c_mondat)
     print(d_mondat)
 
-# a modell altal megadott ertekek kiirasa
+
 def adatkeszlet_cimkezese(adat_keszlet, modell, vec):
+    """
+    Adatok címkézése a tanult modell segítségével
+    """
+
     uj_adat = pd.DataFrame(columns=['original_label', 'predicted_label'])
     for sor in range(len(adat_keszlet)):
         p = modell.predict(vec.transform([adat_keszlet['szoveg'].iloc[sor]]))
         uj_adat.loc[sor] = [adat_keszlet['cimke'].iloc[sor],p]
     pd.DataFrame(uj_adat).to_csv('cimkezett_adat.csv')
+
+
+def modell_elemzes( modell_tipus: Any):
+    """
+    Betölti az adatokat, tokenizálja, vectorizálja 
+    és felállítja a modellt, kiszámítja a mutatószámokat
+    """
+
+    adat_keszlet = pd.read_csv("feldolgozott_adat.csv")
+    
+    # csak vektorizacio_v1 esetében
+    # x, y, x_teszt, y_teszt, vec = vektorizacio_v1(adat_keszlet)
+
+    # csak vektorizacio_v2 esetében
+   # x, y, x_teszt, y_teszt = vektorizacio_v2(adat_keszlet)
+    x, y, x_teszt, y_teszt = vektorizacio_v3(adat_keszlet)
+    modell_felallitasa(modell_tipus, x,y,x_teszt,y_teszt)
+
+    # csak vektorizacio_v1 esetében
+    # mondatok_cimkezese(modell_tipus, vec)
+    # adatkeszlet_cimkezese(adat_teszt,modell_tipus,vec)   
+
+
+if __name__ == "__main__":
+    modell_elemzes(DecisionTreeClassifier(random_state=42))
+    modell_elemzes(KNeighborsClassifier(n_neighbors=8))
+    modell_elemzes(RandomForestClassifier(n_estimators=200, random_state=42))
+    #modell_elemzes(MultinomialNB())
+    #modell_elemzes(xgb.XGBClassifier(random_state=42))
+    #modell_elemzes(LogisticRegression())
+    #modell_elemzes(SVC(kernel='linear', C = 1.0))
+
+# Források:
+# forras: https://www.analyticsvidhya.com/blog/2021/07/performing-sentiment-analysis-with-naive-bayes-classifier/
+# forras: https://machinelearningmastery.com/roc-curves-and-precision-recall-curves-for-classification-in-python/
+# forras: https://www.codegrepper.com/code-examples/python/from+sklearn.metrics+import+roc_curve
+# forras: https://www.analyticsvidhya.com/blog/2021/06/nlp-sentiment-analysis/
+# forras: https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html
+# forras: https://www.analyticsvidhya.com/blog/2021/07/performing-sentiment-analysis-with-naive-bayes-classifier/
+# url ="https://s3.amazonaws.com/dl4j-distribution/GoogleNews-vectors-negative300.bin.gz"
+# https://www.analyticsvidhya.com/blog/2021/07/performing-sentiment-analysis-with-naive-bayes-classifier/
+# forras: https://www.jcchouinard.com/confusion-matrix-in-scikit-learn/
+# forras: https://www.jcchouinard.com/confusion-matrix-in-scikit-learn/
 
 # a kulonbozo modellek listaja
 # https://realpython.com/logistic-regression-python/#logistic-regression-python-package
@@ -191,11 +258,3 @@ def adatkeszlet_cimkezese(adat_keszlet, modell, vec):
 # https://stackabuse.com/python-for-nlp-sentiment-analysis-with-scikit-learn/
 # https://www.analyticsvidhya.com/blog/2021/07/performing-sentiment-analysis-with-naive-bayes-classifier/
 # https://www.projectpro.io/recipes/use-xgboost-classifier-and-regressor-in-python
-
-modell_elemzes(adat_keszlet,DecisionTreeClassifier(random_state=42))
-# modell_elemzes(adat_keszlet,KNeighborsClassifier(n_neighbors=8))
-# modell_elemzes(adat_keszlet,RandomForestClassifier(n_estimators=200, random_state=42))
-# modell_elemzes(adat_keszlet,MultinomialNB())
-# modell_elemzes(adat_keszlet, xgb.XGBClassifier(random_state=42))
-# modell_elemzes(adat_keszlet,LogisticRegression())
-# modell_elemzes(adat_keszlet,SVC(kernel='linear', C = 1.0))
