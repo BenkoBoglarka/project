@@ -11,6 +11,7 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.ensemble import RandomForestClassifier
 import sklearn.metrics as metrics
+from sklearn import utils
 from sklearn.metrics import accuracy_score,precision_score,recall_score,confusion_matrix,roc_curve,classification_report, plot_confusion_matrix
 from sklearn.model_selection import train_test_split
 import datetime
@@ -55,34 +56,6 @@ def vektorizacio_v2(adat_keszlet: pd.DataFrame):
     buh.build_vocab(data)
     buh.train(data, total_examples=buh.corpus_count, epochs=buh.epochs)
     words = set(buh.wv.index_to_key)
-    # x_vect_tanulo = []
-    # for ls in x:
-    #     for i in ls:
-    #         print(i)
-    #         if i in words:
-    #             x_vect_tanulo.append(buh.wv[i])
-    # x_vect_teszt = []
-    # for ls in x_teszt:
-    #     for i in ls:
-    #         if i in words:
-    #             x_vect_teszt.append(buh.wv[i])
-    # for i in x_vect_tanulo:
-    #     print(i)
-    # temp = []
-    # for v in x_vect_tanulo:
-    #     if v.size:
-    #         temp = pd.concat([temp, pd.Series(v.mean(axis=0))])
-    #     else:
-    #         temp = pd.concat([temp, pd.Series(v.mean(np.zeros(100, dtype=float)))])
-
-    # temp2 = []
-    # for v in x_vect_teszt:
-    #     if v.size:
-    #         temp2 = pd.concat([temp2, pd.Series(v.mean(axis=0))])
-    #     else:
-    #         temp2 = pd.concat([temp2, pd.Series(v.mean(np.zeros(100, dtype=float)))])
-    # for i, v in enumerate(x_vect_tanulo):
-    #     print(len(x.iloc[i]), len(v))
     temp = pd.DataFrame()
 
     for i in data:
@@ -115,10 +88,11 @@ def vektorizacio_v3(adat_keszlet: pd.DataFrame):
     tagged_data = []
     for i,d in enumerate(data):
         tagged_data.append(gensim.models.doc2vec.TaggedDocument(d, [i]))
-    model = gensim.models.Doc2Vec(tagged_data,vector_size=100,min_count= 2)
-    model.build_vocab(tagged_data)
+    model = gensim.models.Doc2Vec(tagged_data,vector_size=100,min_count= 5, dm=4, alpha=0.025)
+    model.build_vocab([x for x in tqdm(tagged_data)])
+    # #model.train(tagged_data, total_examples=model.corpus_count, epochs=model.epochs)
+    # tagged_data = utils.shuffle(tagged_data)
     model.train(tagged_data, total_examples=model.corpus_count, epochs=model.epochs)
-
     x_tanulo = []
     for i in tagged_data:
         heh = model.infer_vector(i.words)
@@ -258,3 +232,4 @@ if __name__ == "__main__":
 # https://stackabuse.com/python-for-nlp-sentiment-analysis-with-scikit-learn/
 # https://www.analyticsvidhya.com/blog/2021/07/performing-sentiment-analysis-with-naive-bayes-classifier/
 # https://www.projectpro.io/recipes/use-xgboost-classifier-and-regressor-in-python
+#https://towardsdatascience.com/implementing-multi-class-text-classification-with-doc2vec-df7c3812824d
