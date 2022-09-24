@@ -2,8 +2,10 @@
 
 ## adat_feldolgozas.py:
 Feldolgozzas a beadott adatokat, úgy hogy utána a modellek betudják könnyedén olvasni, végül a feldolgozott_adat.csv-be írja be.
-twitter_training1.csv forrása: https://www.kaggle.com/datasets/jp797498e/twitter-entity-sentiment-analysis
-train1.csv, test1.csv forrása: https://github.com/redocer/NLP_Sentiment_Analysis
+twitter_training1.csv forrása:
+https://www.kaggle.com/datasets/jp797498e/twitter-entity-sentiment-analysis
+train1.csv, test1.csv forrása:
+https://github.com/redocer/NLP_Sentiment_Analysis
 
 ## adat_modellezes.py:
 Többféle modellt állít fel a betáplált adatokból, megmutatja konfúziós mátrix és mutatószámok segítségévela modell teljesítményét.
