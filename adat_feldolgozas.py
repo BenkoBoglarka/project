@@ -12,7 +12,7 @@ def adatok_betoltese() -> pd.DataFrame:
     ismétlődéseket
     """
 
-    adat_keszlet = pd.read_csv("twitter_training.csv")
+    adat_keszlet = pd.read_csv("twitter_training1.csv")
     adat_keszlet.rename(columns={'tweet': 'szoveg', 'label': 'cimke'}, inplace=True)
     adat_keszlet.replace(to_replace="Irrelevant", value=0, inplace=True)
     adat_keszlet.replace(to_replace="Positive", value=1, inplace=True)
