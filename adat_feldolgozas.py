@@ -18,7 +18,7 @@ def adatok_betoltese() -> pd.DataFrame:
     adat_keszlet.replace(to_replace="Positive", value=2, inplace=True)
     adat_keszlet.replace(to_replace="Neutral", value=1, inplace=True)
     adat_keszlet.replace(to_replace="Negative", value=0, inplace=True)
-    adat_keszlet.duplicated(keep='first')
+    adat_keszlet.drop_duplicates(keep='first', subset='szoveg', inplace=True)
     return adat_keszlet
 
 
@@ -108,7 +108,7 @@ def main() -> None:
         corpus = lemmatizer.lemmatize(corpus)
         uj_adat_keszlet.loc[sor] = [adat_keszlet['cimke'].iloc[sor], corpus]
     uj_adat_keszlet = ures_sorok(uj_adat_keszlet)
-    uj_adat_keszlet.duplicated(keep='first')
+    uj_adat_keszlet.drop_duplicates(keep='first', subset='szoveg', inplace=True)
     pd.DataFrame(uj_adat_keszlet).to_csv("feldolgozott_adat.csv", index=False)
 
 
