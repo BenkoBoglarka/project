@@ -14,10 +14,10 @@ def adatok_betoltese() -> pd.DataFrame:
 
     adat_keszlet = pd.read_csv("twitter_training1.csv")
     adat_keszlet.rename(columns={'tweet': 'szoveg', 'label': 'cimke'}, inplace=True)
-    adat_keszlet.replace(to_replace="Irrelevant", value=0, inplace=True)
-    adat_keszlet.replace(to_replace="Positive", value=1, inplace=True)
-    adat_keszlet.replace(to_replace="Neutral", value=0, inplace=True)
-    adat_keszlet.replace(to_replace="Negative", value=-1, inplace=True)
+    adat_keszlet.replace(to_replace="Irrelevant", value=1, inplace=True)
+    adat_keszlet.replace(to_replace="Positive", value=2, inplace=True)
+    adat_keszlet.replace(to_replace="Neutral", value=1, inplace=True)
+    adat_keszlet.replace(to_replace="Negative", value=0, inplace=True)
     adat_keszlet.duplicated(keep='first')
     return adat_keszlet
 
@@ -108,6 +108,7 @@ def main() -> None:
         corpus = lemmatizer.lemmatize(corpus)
         uj_adat_keszlet.loc[sor] = [adat_keszlet['cimke'].iloc[sor], corpus]
     uj_adat_keszlet = ures_sorok(uj_adat_keszlet)
+    uj_adat_keszlet.duplicated(keep='first')
     pd.DataFrame(uj_adat_keszlet).to_csv("feldolgozott_adat.csv", index=False)
 
 

@@ -4,9 +4,8 @@ import matplotlib.pyplot as plt
 import datetime
 import xgboost as xgb
 import gensim
-import numpy as np
 from tqdm import tqdm
-from typing import Any, List
+from typing import Any
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
@@ -21,7 +20,6 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
     confusion_matrix,
-    roc_curve,
     classification_report,
     plot_confusion_matrix)
 
@@ -90,93 +88,74 @@ def mondatok_cimkezese(modell: Any, vec: CountVectorizer) -> None:
     print(c_mondat)
     print(d_mondat)
 
-
-def adatkeszlet_cimkezese(adat_keszlet: pd.DataFrame, modell: Any, vec: CountVectorizer) -> None:
+def vektorizacio_v1(x: pd.DataFrame, y: pd.DataFrame, modell: Any) -> pd.DataFrame:
     """
-    Adatok címkézése a tanult modell segítségével
-    """
-
-    uj_adat = pd.DataFrame(columns=['original_label', 'predicted_label'])
-    for sor in range(len(adat_keszlet)):
-        p = modell.predict(vec.transform([adat_keszlet['szoveg'].iloc[sor]]))
-        uj_adat.loc[sor] = [adat_keszlet['cimke'].iloc[sor], p]
-    pd.DataFrame(uj_adat).to_csv('cimkezett_adat.csv')
-
-
-def vektorizacio_v1(adat_keszlet: pd.DataFrame, modell: Any) -> pd.DataFrame:
-    """
-    Adatok felosztása, tokenizálása és vektorizálása
+    Adatok tokenizálása és vektorizálása
     Verzió 1: CountVectorizer()
     """
-    x = adat_keszlet['szoveg']
-    y = adat_keszlet['cimke']
+    
+    print('Vektorizáció CountVectorizer segítségével:')
 
-    x, x_teszt, y, y_teszt = train_test_split(x, y, stratify=y, test_size=0.25, random_state=42)
-
-    vec = CountVectorizer(ngram_range=(1, 2))
-    x = vec.fit_transform(x).toarray()
-    x_teszt = vec.transform(x_teszt).toarray()
+    vek = CountVectorizer(ngram_range=(1, 2))
+    x = vek.fit_transform(x)
+    
+    x, x_teszt, y, y_teszt = train_test_split(x, y, stratify=y, test_size=0.25, random_state=1900)
 
     modell_felallitasa(modell, x, y, x_teszt, y_teszt)
-    mondatok_cimkezese(modell, vec)
+    mondatok_cimkezese(modell, vek)
 
 
-def vektorizacio_v2(adat_keszlet: pd.DataFrame, modell: Any) -> pd.DataFrame:
+def vektorizacio_v2(x: pd.DataFrame, y: pd.DataFrame, modell: Any) -> pd.DataFrame:
     """
-    Adatok felosztása, tokenizálása és vektorizálása
+    Adatok tokenizálása és vektorizálása
     Verzió 2: Word2Vec()
     """
-    x = adat_keszlet['szoveg']
-    y = adat_keszlet['cimke']
+    print('Vektorizáció Word2Vec segítségével:')
 
     data = []
-    for i in x:
-        aaa = i.split(' ')
-        data.append(aaa)
+    for sor in x:
+        korpus = sor.split(' ')
+        data.append(korpus)
 
-    buh = gensim.models.Word2Vec(min_count=5, seed=1900, vector_size=200, window=4)
-    buh.build_vocab(data)
-    buh.train(data, total_examples=buh.corpus_count, epochs=buh.epochs)
-    words = set(buh.wv.index_to_key)
-    temp = pd.DataFrame()
+    modell = gensim.models.Word2Vec(min_count=5, seed=1900, vector_size=200, window=4)
+    modell.build_vocab(data)
+    modell.train(data, total_examples=modell.corpus_count, epochs=modell.epochs)
+    szo_keszlet = set(modell.wv.index_to_key)
+    uj_adat = pd.DataFrame()
 
-    for i in data:
-        kimi = pd.DataFrame()
-        for j in i:
-            if j in words:
-                kimi = pd.concat([kimi, pd.Series(buh.wv[j])])
+    for sor in data:
+        vektorok = pd.DataFrame()
+        for szo in sor:
+            if szo in szo_keszlet:
+                vektorok = pd.concat([vektorok, pd.Series(modell.wv[szo])])
             else:
-                kimi = pd.concat([kimi, pd.Series(0, )])
+                vektorok = pd.concat([vektorok, pd.Series(0, )])
 
-        ddd = kimi.mean()
-        temp = pd.concat([temp, pd.Series(ddd)])
+        vektor_atlag = vektorok.mean()
+        uj_adat = pd.concat([uj_adat, pd.Series(vektor_atlag)])
 
-    x, x_teszt, y, y_teszt = train_test_split(temp, y, stratify=y, test_size=0.25, random_state=42)
+    x, x_teszt, y, y_teszt = train_test_split(uj_adat, y, stratify=y, test_size=0.25, random_state=42)
     modell_felallitasa(modell, x, y, x_teszt, y_teszt)
 
 
-def vektorizacio_v3(adat_keszlet: pd.DataFrame, modell: Any) -> pd.DataFrame:
+def vektorizacio_v3(x: pd.DataFrame, y: pd.DataFrame, modell: Any) -> pd.DataFrame:
     """
-    Adatok felosztása, tokenizálása és vektorizálása
+    Adatok tokenizálása és vektorizálása
     Verzió 3: Doc2Vec()
     """
-    x = adat_keszlet['szoveg']
-    y = adat_keszlet['cimke']
+    print('Vektorizáció Doc2Vec segítségével:')
+    cimkezett_adat = []
 
-    data = []
-    for i in x:
-        aaa = i.split(' ')
-        data.append(aaa)
-    tagged_data = []
-    for i, d in enumerate(data):
-        tagged_data.append(gensim.models.doc2vec.TaggedDocument(d, [i]))
-    model = gensim.models.Doc2Vec(tagged_data, vector_size=100, min_count=5, dm=4, alpha=0.025)
-    model.build_vocab([x for x in tqdm(tagged_data)])
-    # #model.train(tagged_data, total_examples=model.corpus_count, epochs=model.epochs)
-    # tagged_data = utils.shuffle(tagged_data)
-    model.train(tagged_data, total_examples=model.corpus_count, epochs=model.epochs)
+    for sorszam, szoveg in enumerate(x):
+        cimkezett_adat.append(gensim.models.doc2vec.TaggedDocument(szoveg.split(' '), [sorszam]))
+
+    model = gensim.models.Doc2Vec(cimkezett_adat, vector_size=100, min_count=5, dm=4, alpha=0.025)
+    model.build_vocab([x for x in tqdm(cimkezett_adat)])
+    model.train(cimkezett_adat, total_examples=model.corpus_count, epochs=model.epochs)
+    cimkezett_adat = utils.shuffle(cimkezett_adat)
+    model.train(cimkezett_adat, total_examples=model.corpus_count, epochs=model.epochs)
     x_tanulo = []
-    for i in tagged_data:
+    for i in cimkezett_adat:
         heh = model.infer_vector(i.words)
         x_tanulo.append(heh)
 
@@ -191,19 +170,22 @@ def main(modell) -> None:
     """
 
     adat_keszlet = pd.read_csv("feldolgozott_adat.csv")
-    #vektorizacio_v1(adat_keszlet, modell)
+    x = adat_keszlet['szoveg']
+    y = adat_keszlet['cimke']
+    vektorizacio_v1(x,y, modell)
     vektorizacio_v2(adat_keszlet, modell)
-    # vektorizacio_v3(adat_keszlet, modell)
+    vektorizacio_v3(x,y, modell)
 
 
 if __name__ == "__main__":
     main(DecisionTreeClassifier(random_state=42))
     main(KNeighborsClassifier(n_neighbors=8))
     main(RandomForestClassifier(n_estimators=200, random_state=42))
-    # modell_elemzes(MultinomialNB())
-    # modell_elemzes(xgb.XGBClassifier(random_state=42))
-    # modell_elemzes(LogisticRegression())
-    # modell_elemzes(SVC(kernel='linear', C = 1.0))
+    main(MultinomialNB())
+    main(xgb.XGBClassifier(random_state=42))
+    main(LogisticRegression())
+    main(SVC(kernel='linear', C = 1.0))
+    
 """
 Források:
 forras: https://www.analyticsvidhya.com/blog/2021/07/performing-sentiment-analysis-with-naive-bayes-classifier/
