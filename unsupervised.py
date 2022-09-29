@@ -5,9 +5,13 @@ import datetime
 from decimal import Decimal
 import xgboost as xgb
 import numpy as np
+from sklearn.cluster import AgglomerativeClustering
 import gensim
+from sklearn.model_selection import KFold, cross_val_score
+import seaborn as sns
 from tqdm import tqdm
 from typing import Any
+from sklearn.ensemble import BaggingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
@@ -20,6 +24,7 @@ from sklearn import utils
 from sklearn.decomposition import PCA
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
+from sklearn.metrics import accuracy_score
 from sklearn.metrics import (
     accuracy_score,
     precision_score,
@@ -28,8 +33,10 @@ from sklearn.metrics import (
     classification_report,
     plot_confusion_matrix)
 from gensim.models import Word2Vec
+from sklearn.preprocessing import StandardScaler
 from gensim.models import Phrases
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.utils import resample
 
 def model1(adat_keszlet: pd.DataFrame) -> pd.DataFrame:
 
@@ -62,21 +69,25 @@ def model1(adat_keszlet: pd.DataFrame) -> pd.DataFrame:
 
         vektor_atlag = vektorok.mean()
         uj_adat = pd.concat([uj_adat, pd.Series(vektor_atlag)])
-    
-    model.fit(uj_adat)
-    alm = model.predict(uj_adat)
-    # print(alm)
-  
-    # lll = []
-    # for i in alm:
-        
-    #     if int(i) ==  int(y):
-    #         hely = 1
-    #     else:
-    #         hely = 0
-    #     lll.append(hely)
+    x, x_teszt, y, y_teszt = train_test_split(uj_adat, y, stratify=y, test_size=0.25, random_state=1900)
 
-    pd.DataFrame(alm).to_csv("feldolgozott_adat_test.csv", index=False)
+    model.fit(x)
+    alm = model.predict(x_teszt)
+    df = pd.DataFrame()
+    df['pre'] = alm
+    df['ori'] = y_teszt
+    df['ori'] = df['ori'].fillna(0)
+    hely=0
+    for i in df.index:
+
+            if int(df['pre'][i]) ==  int(df['ori'][i]):
+                hely += 1
+
+
+    print(hely/len(df))
+    score = accuracy_score(y_teszt,alm)
+    print(score)
+    #pd.DataFrame(alm).to_csv("feldolgozott_adat_test.csv", index=False)
 
 def model2(adat_keszlet: pd.DataFrame) -> pd.DataFrame:
 
@@ -125,13 +136,20 @@ def model3(adat_keszlet: pd.DataFrame) -> pd.DataFrame:
     tfidf = TfidfVectorizer()
     tfidf.fit(sentences)
     sentences = tfidf.transform(sentences)
+    pca = PCA(n_components=2)
+    scaler = StandardScaler()
+
+    #xx = np.concatenate(words['vectors'].values)
+    xx = scaler.fit_transform(scaler)
+    # #xx = np.concatenate(xx)
+    xx =  pca.fit_transform(scaler)
     # data = []
 
     # for i in sentences:
     #     sor = i.split(' ')
     #     data.append(sor)
 
-    x, x_teszt, y, y_teszt = train_test_split(sentences, y, stratify=y, test_size=0.25, random_state=1900)
+    x, x_teszt, y, y_teszt = train_test_split(xx, y, stratify=y, test_size=0.25, random_state=1900)
     model = DecisionTreeClassifier().fit(x, y)
     pont = model.score(x_teszt, y_teszt)
     print(pont)
@@ -146,22 +164,25 @@ def model4(adat_keszlet: pd.DataFrame) -> pd.DataFrame:
     sentences = bigram[x]
     data = []
 
+    ddata = []
+
+
+   
+
     for i in sentences:
         sor = i.split(' ')
         data.append(sor)
 
-    w2v_model = gensim.models.Word2Vec(min_count=3,
-                     window=4,
-                     vector_size=1000,
-                     sample=1e-5, 
-                     alpha=0.03, 
-                     min_alpha=0.0007, 
-                     negative=20)
-    w2v_model.build_vocab(sentences, progress_per=10000)
-    w2v_model.train(sentences, total_examples=w2v_model.corpus_count, epochs=30)
+ 
+    w2v_model = gensim.models.Word2Vec(min_count=2)
+    w2v_model.build_vocab(sentences)
+    w2v_model.train(sentences, total_examples=w2v_model.corpus_count, epochs=w2v_model.epochs)
     word_vectors = w2v_model.wv
     szokeszlet = word_vectors.index_to_key
-    model = KMeans(n_clusters=2, max_iter=1000, random_state=True, n_init=50)
+    #model = KMeans(n_clusters=2,init='k-means++', random_state=1900, n_init=6,algorithm='elkan')
+     #= AgglomerativeClustering(n_clusters=2, affinity='euclidean', linkage='ward')
+    model = KMeans(n_clusters=2,init='k-means++', random_state=1900, n_init=6,algorithm='elkan')
+    #model = KMeans(n_clusters=2, max_iter=1000, random_state=True, n_init=50)
     #.fit(X=word_vectors.vectors)
     #     #print(bla)
     def hey(data):
@@ -171,24 +192,36 @@ def model4(adat_keszlet: pd.DataFrame) -> pd.DataFrame:
     words = pd.DataFrame(sentences)
     words.columns=['words']
     words['vectors'] = words.words.apply(hey)
+    pca = PCA(n_components=2)
+    scaler = StandardScaler()
 
     xx = np.concatenate(words['vectors'].values)
-    model.fit(xx)
+    #xx = scaler.fit_transform(xx)
+    # #xx = np.concatenate(xx)
+    #xx =  pca.fit_transform(xx)
+
+        #print(data)
+
+
+    uuu = []
 #     words['cluster'] = words.vectors.apply(lambda x: model.predict(x.reshape(1,-1)))
-    words['cluster'] = model.predict(xx)
-    words['original'] = y
+    # 
+
+    x, x_teszt, y, y_teszt = train_test_split(xx, y, stratify=y, test_size=0.25, random_state=42)
+    model.fit(x)
+    dpp = pd.DataFrame()
+    dpp['pre']= model.predict(x_teszt)
+    dpp['ori'] = y_teszt
     #print(words)
-    lll = []
-    for i in words.index:
-        
-        if int(words['cluster'][i]) ==  int(words['original'][i]):
-            hely = 1
-        else:
-            hely = 0
-        lll.append(hely)
+  
+    dpp['ori'] = dpp['ori'].fillna(0)
+    hely=0
+    for i in dpp.index:
+            if int(dpp['pre'][i]) ==  int(dpp['ori'][i]):
+                hely += 1
 
-    pd.DataFrame(lll).to_csv("feldolgozott_adat_test.csv", index=False)
 
+    print(hely/len(dpp))
 
 def model5(adat_keszlet: pd.DataFrame) -> pd.DataFrame:
 
@@ -208,17 +241,28 @@ def model5(adat_keszlet: pd.DataFrame) -> pd.DataFrame:
     for sorszam, szoveg in enumerate(data):
         cimkezett_adat.append(gensim.models.doc2vec.TaggedDocument(szoveg.split(' '), [sorszam]))
 
-    model = gensim.models.Doc2Vec(cimkezett_adat, vector_size=100, min_count=2, dm=4, alpha=0.025)
-    # model.build_vocab([x for x in tqdm(cimkezett_adat)])
-    # model.train(cimkezett_adat, total_examples=model.corpus_count, epochs=model.epochs)
+    model = gensim.models.Doc2Vec(vector_size=100, min_count=3, dm=4, alpha=0.025)
+    model.build_vocab([x for x in tqdm(cimkezett_adat)])
+    model.train(cimkezett_adat, total_examples=model.corpus_count, epochs=model.epochs)
     cimkezett_adat = utils.shuffle(cimkezett_adat)
     model.train(cimkezett_adat, total_examples=model.corpus_count, epochs=model.epochs)
     x_tanulo = []
     for i in cimkezett_adat:
         heh = model.infer_vector(i.words)
         x_tanulo.append(heh)
+
+    pca = PCA(n_components=2)
+    scaler = StandardScaler()
+
+   
+    #x_tanulo = scaler.fit_transform(x_tanulo)
+    # #xx = np.concatenate(xx)
+    #x_tanulo =  pca.fit_transform(x_tanulo)
     x, x_teszt, y, y_teszt = train_test_split(x_tanulo, y, stratify=y, test_size=0.25, random_state=42)
-    mean = KMeans(n_clusters=2, max_iter=1000, random_state=True, n_init=50)
+    #mean = KMeans(n_clusters=2,init='k-means++', random_state=1900, n_init=6,algorithm='elkan')
+ 
+    mean = KMeans(n_clusters=2, max_iter=1000, random_state=1900, n_init=6)
+    #mean = AgglomerativeClustering(n_clusters=2, affinity='euclidean', linkage='ward')
     mean.fit(x)
     me = mean.predict(x_teszt)
     df = pd.DataFrame()
@@ -233,11 +277,43 @@ def model5(adat_keszlet: pd.DataFrame) -> pd.DataFrame:
 
 
     print(hely/len(df))
-    pd.DataFrame(df).to_csv("feldolgozott_adat_test.csv", index=False)
+    score = accuracy_score(df['ori'], df['pre'])
+    print(score)
+    # enstimator = [2,4,6,8,10,12,14,16]
+    # models = []
+    # scores =  []
+    #accuracy = []
+    # for n in enstimator:
+    #     clf = BaggingClassifier(n_estimators = n, random_state = 22)
+    #     clf.fit(x,y)
+
+    # for i in range(1000):
+    #     x_bs, y_bs = resample(x,y, replace=True)
+    #     me = mean.predict(x_bs)
+    #     # df = pd.DataFrame()
+    #     # df['pre'] = me
+    #     # df['ori'] = y_bs
+    #     #df['ori'] = df['ori'].fillna(0)
+    #     score = accuracy_score(y_bs,me)
+    #     print(score)
+    #     accuracy.append(score)
+    # sns.kdeplot(accuracy)
+    # plt.title('csd')
+    # plt.xlabel('Accuracy')
+    # plt.show()
+    # hely=0
+    # for i in df.index:
+
+    #         if int(df['pre'][i]) ==  int(df['ori'][i]):
+    #             hely += 1
+
+
+    # print(hely/len(df))
+    # pd.DataFrame(df).to_csv("feldolgozott_adat_test.csv", index=False)
+    
     #pd.DataFrame(me).to_csv("feldolgozott_adat_test.csv", index=False)
    
-    # modell_felallitasa(modell, x, y, x_teszt, y_teszt)
-
+  
 def model6(adat_keszlet: pd.DataFrame) -> pd.DataFrame:
 
     x = adat_keszlet['szoveg']
@@ -261,11 +337,18 @@ def model6(adat_keszlet: pd.DataFrame) -> pd.DataFrame:
     df = pd.DataFrame()
     df['pre'] = pre
     df['ori'] = y_teszt
-    pd.DataFrame(df).to_csv("feldolgozott_adat_test.csv", index=False)
+    df['ori'] = df['ori'].fillna(0)
+    hely=0
+    for i in df.index:
+
+            if int(df['pre'][i]) ==  int(df['ori'][i]):
+                hely += 1
+
+
+    print(hely/len(df))
+    #pd.DataFrame(df).to_csv("feldolgozott_adat_test.csv", index=False)
    
     
-
-
 def main() -> None:
     """
     Betölti az adatokat, tokenizálja, vectorizálja
