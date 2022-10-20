@@ -14,10 +14,17 @@ def adatok_betoltese() -> pd.DataFrame:
 
     adat_keszlet = pd.read_csv("twitter_training1.csv")
     adat_keszlet.rename(columns={'tweet': 'szoveg', 'label': 'cimke'}, inplace=True)
-    adat_keszlet.replace(to_replace="Irrelevant", value=1, inplace=True)
+ #   adat_keszlet.replace(to_replace="pos", value=1, inplace=True)
     adat_keszlet.replace(to_replace="Positive", value=2, inplace=True)
-    adat_keszlet.replace(to_replace="Neutral", value=1, inplace=True)
-    adat_keszlet.replace(to_replace="Negative", value=0, inplace=True)
+    adat_keszlet.replace(to_replace="Neutral", value=0, inplace=True)
+#    adat_keszlet.replace(to_replace="neg", value=0, inplace=True)
+    adat_keszlet.replace(to_replace="Irrelevant", value=0, inplace=True)
+    adat_keszlet.replace(to_replace="Negative", value=-1, inplace=True)
+    adat_keszlet.drop('pack', axis=1, inplace=True)
+    # adat_keszlet.drop('cv_tag', axis=1, inplace=True),
+    # adat_keszlet.drop('html_id', axis=1, inplace=True)
+    # adat_keszlet.drop('sent_id', axis=1, inplace=True)
+    #adat_keszlet.drop('pack', axis=1, inplace=True)
     adat_keszlet.drop_duplicates(keep='first', subset='szoveg', inplace=True)
     return adat_keszlet
 
@@ -44,7 +51,7 @@ def torlendo_szavak(corpus: List) -> List:
     for szo in range(len(corpus)):
         uj_szo = corpus[szo]
         uj_szo = uj_szo.strip().lower()
-        rovidites_lista = ["@", "#", ".it", "RMTrgF", ".tv", ".com", ".org", "https", ".co", ".tt", "com", "www"]
+        rovidites_lista = ["@", "#",'/', ".it", "RMTrgF", ".tv", ".com", ".org", "https", ".co", ".tt", "com", "www"]
         for rov in rovidites_lista:
             if rov in corpus[szo]:
                 uj_szo = ""
