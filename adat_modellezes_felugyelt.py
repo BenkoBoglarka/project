@@ -24,7 +24,7 @@ x = adat['szoveg']
 y = adat['cimke']
 
 # adatok felosztása tanuló és teszt halmazra
-x_tanulo, x_teszt, y_tanulo, y_teszt = train_test_split(x,y,random_state=1990, test_size=0.45, shuffle=True)
+x_tanulo, x_teszt, y_tanulo, y_teszt = train_test_split(x,y,random_state=144, test_size=0.30, shuffle=True)
 
 # vektorizálás
 vektorok = CountVectorizer()
