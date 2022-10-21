@@ -12,15 +12,15 @@ def adatok_betoltese() -> pd.DataFrame:
     ismétlődéseket
     """
 
-    adat_keszlet = pd.read_csv("twitter_training1.csv")
-    adat_keszlet.rename(columns={'tweet': 'szoveg', 'label': 'cimke'}, inplace=True)
+    adat_keszlet = pd.read_csv("IMDB Dataset.csv")
+    adat_keszlet.rename(columns={'review': 'szoveg', 'sentiment': 'cimke'}, inplace=True)
  #   adat_keszlet.replace(to_replace="pos", value=1, inplace=True)
-    adat_keszlet.replace(to_replace="Positive", value=2, inplace=True)
-    adat_keszlet.replace(to_replace="Neutral", value=0, inplace=True)
-#    adat_keszlet.replace(to_replace="neg", value=0, inplace=True)
-    adat_keszlet.replace(to_replace="Irrelevant", value=0, inplace=True)
-    adat_keszlet.replace(to_replace="Negative", value=-1, inplace=True)
-    adat_keszlet.drop('pack', axis=1, inplace=True)
+#     adat_keszlet.replace(to_replace="Positive", value=1, inplace=True)
+#     adat_keszlet.replace(to_replace="Neutral", value=0, inplace=True)
+# #      adat_keszlet.replace(to_replace="neg", value=0, inplace=True)
+#     adat_keszlet.replace(to_replace="Irrelevant", value=0, inplace=True)
+#     adat_keszlet.replace(to_replace="Negative", value=-1, inplace=True)
+    #adat_keszlet.drop('pack', axis=1, inplace=True)
     # adat_keszlet.drop('cv_tag', axis=1, inplace=True),
     # adat_keszlet.drop('html_id', axis=1, inplace=True)
     # adat_keszlet.drop('sent_id', axis=1, inplace=True)
