@@ -12,6 +12,12 @@ https://textblob.readthedocs.io/en/dev/
 https://www.geeksforgeeks.org/python-sentiment-analysis-using-vader/https://www.geeksforgeeks.org/python-sentiment-analysis-using-vader/
 https://towardsdatascience.com/sentiment-analysis-in-10-minutes-with-rule-based-vader-and-nltk-72067970fb71
 https://sparkbyexamples.com/pandas/pandas-add-column-names-to-dataframe/
+
+cimkezes()
+https://www.analyticsvidhya.com/blog/2021/06/rule-based-sentiment-analysis-in-python/
+
+pontosság:
+https://medium.com/@himanshuit3036/supervised-learning-methods-using-python-bb85b8c4e0b7
 """
 import pandas as pd
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
@@ -31,10 +37,6 @@ def cimkezes(score):
     else:
         return 'positive'
 
-def osszeallitas(tipus):
-    uj_x['hangulat'] = uj_x['szoveg'].apply(tipus)
-    uj_x['cimke'] = uj_x['hangulat'].apply(cimkezes)
-    uj_x['eredeti_cimke'] = y
 
 #TextBlob
 def hangulat_textblob(token):
@@ -46,7 +48,17 @@ def hangulat_vader(token):
     hangulat = analyzer.polarity_scores(token)
     return hangulat['compound']
 
-pd.DataFrame(uj_x[['hangulat','cimke','eredeti_cimke']]).to_csv("kesz.py", index=False)
 
+uj_x['hangulat'] = uj_x['szoveg'].apply(hangulat_textblob)
+uj_x['cimke'] = uj_x['hangulat'].apply(cimkezes)
+uj_x['eredeti_cimke'] = y
 pontossag = accuracy_score(y,uj_x['cimke'])
 print(pontossag)
+pd.DataFrame(uj_x[['hangulat','cimke','eredeti_cimke']]).to_csv("kesz.py", index=False)
+
+
+
+
+
+
+
