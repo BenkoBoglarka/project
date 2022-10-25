@@ -33,6 +33,9 @@ KMeans modell felállítása:
 https://www.kaggle.com/code/nareyko/google-word2vec-kmeans-pca/notebook
 https://www.analyticsvidhya.com/blog/2021/06/rule-based-sentiment-analysis-in-python/
 https://towardsdatascience.com/unsupervised-sentiment-analysis-a38bf1906483
+
+Phrases:
+https://radimrehurek.com/gensim/models/word2vec.html
 """
 import pandas as pd
 from gensim.models import Word2Vec
@@ -40,6 +43,7 @@ from nltk.tokenize import word_tokenize
 import numpy as np
 from sklearn.metrics import accuracy_score
 from sklearn.cluster import KMeans
+from gensim.models import Phrases
 
 # csv betöltése
 adat = pd.read_csv("feldolgozott_adat.csv")
@@ -51,11 +55,13 @@ tokenek = []
 for mondat in x:
     tokenek.append(word_tokenize(mondat))
 
+bigram = Phrases(tokenek)
+
 # Word2Vec felállítása
 w2v = Word2Vec(
-    min_count=5, 
+    min_count=2, 
     window=3, 
-    vector_size=1000, 
+    vector_size=500, 
     workers=3,
     sg=1,
     negative=20,
@@ -63,10 +69,10 @@ w2v = Word2Vec(
     min_alpha=0.0007)
 
 # Word2Vec szókincs
-w2v.build_vocab(tokenek)
+w2v.build_vocab(bigram[tokenek])
 
 # Word2Vec edzése
-w2v.train(tokenek, total_examples=w2v.corpus_count, epochs=w2v.epochs, report_delay=1)
+w2v.train(bigram[tokenek], total_examples=w2v.corpus_count, epochs=w2v.epochs, report_delay=1)
 
 # Word2Vec mentése
 w2v.save("modell.model")
@@ -87,7 +93,7 @@ def cimkek_atalakitasa(vektor):
 
 # Mondatok felcímkézése
 mondatok = pd.DataFrame()
-mondatok['mondat'] = tokenek
+mondatok['mondat'] = bigram[tokenek]
 mondatok['vektor'] = mondatok.mondat.apply(vektorok_kiszamitasa)
 
 # KMeans modell felállítása
