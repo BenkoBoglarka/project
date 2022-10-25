@@ -1,5 +1,7 @@
 """
 FORRÁSOK:
+Python szerkezet:
+https://realpython.com/python-main-function/
 
 CSV betöltése:
 https://www.geeksforgeeks.org/how-to-do-train-test-split-using-sklearn-in-python/
@@ -31,7 +33,6 @@ https://www.geeksforgeeks.org/adding-new-column-to-existing-dataframe-in-pandas/
 https://www.geeksforgeeks.org/add-column-names-to-dataframe-in-pandas/
 """
 import pandas as pd
-import nltk
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 # nltk.download('stopwords')
@@ -40,10 +41,8 @@ from nltk.corpus import wordnet
 from nltk import pos_tag
 import re
 
-adat = pd.read_csv('IMDB Dataset.csv')
-
-
-def tokenizer(adat):
+def ossze_allitas():
+    adat = pd.read_csv('IMDB Dataset.csv')
     tokens = []
     for sent in adat['review']:
         # Kisbetűssé alakítás
@@ -107,5 +106,5 @@ def feldolgozas(sent):
             kesz.append(lemma)
     return kesz
 
-tokenizer(adat)
-
+if __name__== "__main__":
+    ossze_allitas()
