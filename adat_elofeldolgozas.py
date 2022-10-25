@@ -48,7 +48,7 @@ def ossze_allitas():
         # Kisbetűssé alakítás
         sent = sent.lower()
         # Pontok, vesszők és egyéb karakterek eltávolítása
-        sent = re.sub(r"[^A-Za-z']", " ", sent)
+        sent = re.sub(r"[^A-Za-z]", " ", sent)
         #Tokenizáció
         sent = word_tokenize(sent)
         sent = feldolgozas(sent)
@@ -66,7 +66,7 @@ def ossze_allitas():
 def feldolgozas(sent):
     lemmatizer = WordNetLemmatizer()
     uj_mondat = []
-
+    print(sent)
     for szo in sent:
         # rövidítések átalakítása
         szo = re.sub("'s", 'is', szo)
@@ -77,11 +77,13 @@ def feldolgozas(sent):
         szo = re.sub("'re", 'are', szo)
         szo = re.sub("'d", 'would', szo)
         szo = re.sub(r'^im$', 'i am', szo)
+        szo = re.sub('hrs', '', szo)
+        szo = re.sub('``', '', szo)
         szo = re.sub("br", '', szo)
         szo = re.sub("'", '', szo)
 
         uj_mondat.append(szo)
-        
+    
     # Üres elemek eltávolítása
     while("" in uj_mondat):
         uj_mondat.remove("")
