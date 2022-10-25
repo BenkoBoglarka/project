@@ -19,23 +19,24 @@ from textblob import TextBlob
 
 # hangulat TextBlob
 def hangulat_textblob(mondat):
-    return TextBlob(mondat).sentiment.poliraty
+    return TextBlob(mondat).sentiment.polarity
 
+# hangulat Vader
 def hangulat_vader(mondat):
     analyzer = SentimentIntensityAnalyzer()
-    vader = analyzer.polarity_scores(review)
+    vader = analyzer.polarity_scores(mondat)
     return vader['compound']
 
 # Cimkezes
 def cimkezes(pont):
-    if score<0:
+    if pont<0:
         return 'negative'
     else:
         return 'positive'
 
 def modell_felallitasa():
     # CSV betöltése, adathalmaz felosztása:
-    adat = pd.read_csv('feldolgozott_adat2.csv')
+    adat = pd.read_csv('feldolgozott_adat_2.csv')
     x = adat['szoveg']
     y = adat['cimke']
 
