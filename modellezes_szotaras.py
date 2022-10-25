@@ -42,7 +42,7 @@ def modell_felallitasa():
 
     # Cimkezes
     uj_adat = pd.DataFrame(x)
-    uj_adat['vektor'] = uj_adat.szoveg.apply(hangulat_textblob)
+    uj_adat['vektor'] = uj_adat.szoveg.apply(hangulat_vader)
     uj_adat['cimke'] = uj_adat.vektor.apply(cimkezes)
 
     # Pontosság

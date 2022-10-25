@@ -66,7 +66,7 @@ def ossze_allitas():
 def feldolgozas(sent):
     lemmatizer = WordNetLemmatizer()
     uj_mondat = []
-    print(sent)
+
     for szo in sent:
         # rövidítések átalakítása
         szo = re.sub("'s", 'is', szo)
@@ -78,6 +78,9 @@ def feldolgozas(sent):
         szo = re.sub("'d", 'would', szo)
         szo = re.sub(r'^im$', 'i am', szo)
         szo = re.sub('hrs', '', szo)
+        szo = re.sub('th', '', szo)
+        szo = re.sub('nd', '', szo)
+        szo = re.sub('st', '', szo)
         szo = re.sub('``', '', szo)
         szo = re.sub("br", '', szo)
         szo = re.sub("'", '', szo)
@@ -99,7 +102,7 @@ def feldolgozas(sent):
     kesz = []
     for szo, tag in uj_mondat:
         # Stop szavak kiszűrése
-        if szo not in set(stopwords.words('english')):
+        #if szo not in set(stopwords.words('english')):
             # Lemmatization
             if not pos_szotar.get(tag[0]):
                 lemma =szo

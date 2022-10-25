@@ -23,26 +23,30 @@ from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import MultinomialNB
+
 
 def modell_felallitasa():
     # CSV betöltése, adathalmaz felosztása:
-    adat = pd.read_csv('feldolgozott_adat2.csv')
+    adat = pd.read_csv('feldolgozott_adat_2.csv')
     x = adat['szoveg']
     y = adat['cimke']
     x_tanulo, x_tesztelo, y_tanulo, y_tesztelo = train_test_split(
         x,
         y,
         random_state=104, 
-        test_size=0.25,
+        test_size=0.20,
         shuffle=True)
     
     # CountVectorizer
-    vektorizer = CountVectorizer(ngrame_range=(2,2))
+    vektorizer = CountVectorizer(ngram_range=(1,2))
     tanulo = vektorizer.fit_transform(x_tanulo)
     tesztelo = vektorizer.transform(x_tesztelo)
 
     # Logistic Regression
     modell = LogisticRegression(max_iter=4000, solver="saga")
+    #modell = MultinomialNB()
     modell.fit(tanulo, y_tanulo)
     elorejelzes = modell.predict(tesztelo)
     
