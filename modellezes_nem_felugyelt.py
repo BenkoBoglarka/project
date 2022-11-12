@@ -18,6 +18,7 @@ https://medium.com/swlh/sentiment-classification-using-word-embeddings-word2vec-
 
 Vektorok megadása (vektorok_kiszamitasa()):
 https://www.kaggle.com/code/nareyko/google-word2vec-kmeans-pca/notebook
+https://stackoverflow.com/questions/66868221/gensim-3-8-0-to-gensim-4-0-0
 
 Mondatok felcímkézése:
 https://towardsdatascience.com/unsupervised-sentiment-analysis-a38bf1906483
@@ -46,6 +47,7 @@ import numpy as np
 from sklearn.metrics import accuracy_score
 from sklearn.cluster import KMeans
 from gensim.models import Phrases
+from sklearn.model_selection import train_test_split
 
 def modell_felallitasa():
     # csv betöltése
@@ -63,7 +65,7 @@ def modell_felallitasa():
     # Word2Vec felállítása
     w2v = Word2Vec(
         min_count=2, 
-        window=3, 
+        window=2, 
         vector_size=500, 
         workers=3,
         sg=1,
@@ -93,21 +95,41 @@ def modell_felallitasa():
             return 'negative'
         else:
             return 'positive'
+    
+    x_tanulo, x_tesztelo, y_tanulo, y_tesztelo = train_test_split(
+        bigram[tokenek],
+        y,
+        random_state=42, 
+        test_size=0.20,
+        shuffle=True)
 
-    # Mondatok felcímkézése
     mondatok = pd.DataFrame()
-    mondatok['mondat'] = bigram[tokenek]
+    mondatok['mondat'] = x_tanulo
+    mondatok = mondatok.reset_index(drop=True)
     mondatok['vektor'] = mondatok.mondat.apply(vektorok_kiszamitasa)
+    mondatok_2 = pd.DataFrame()
+    mondatok_2 = mondatok_2.reset_index(drop=True)
+    mondatok_2['mondat'] = x_tesztelo
+    mondatok_2['vektor'] = mondatok_2.mondat.apply(vektorok_kiszamitasa)
+    teszteloo = pd.DataFrame(y_tesztelo).reset_index(drop=True)
 
     # KMeans modell felállítása
     tanulo_halmaz = np.concatenate(mondatok['vektor'].values)
+    tesztelo_halmaz = np.concatenate(mondatok_2['vektor'].values)
+
     kmeans = KMeans(n_clusters=2, max_iter=1000,random_state=True,n_init=50)
     kmeans.fit(tanulo_halmaz)
-    mondatok['kategoria'] = kmeans.predict(tanulo_halmaz)
-    mondatok['cimke'] = mondatok.kategoria.apply(cimkek_atalakitasa)
+    mondatok_2['kategoria'] = kmeans.predict(tesztelo_halmaz)
 
+    # mondatok_2['clust_value'] = [1 if i==0 else -1 for i in mondatok_2.kategoria]
+    # mondatok_2['clust_scire']= mondatok_2.vektor.apply(lambda x: 1/(kmeans.transform(x).min()))
+    # mondatok_2['sentiment'] = mondatok_2.clust_scire * mondatok_2.kategoria
+    
+    mondatok_2['cimke'] = mondatok_2.kategoria.apply(cimkek_atalakitasa)
+    mondatok_2['eredeti'] = teszteloo
+   
     # Pontosság
-    pontossag = accuracy_score(y,mondatok['cimke'])
+    pontossag = accuracy_score(teszteloo,mondatok_2['cimke'])
     print(pontossag)
 
 if __name__== "__main__":
