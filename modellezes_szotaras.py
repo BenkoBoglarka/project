@@ -60,10 +60,8 @@ def modell_felallitasa():
     #Cimkezes
     uj_adat = pd.DataFrame()
     uj_adat['szoveg'] = bigram[x]
-    uj_adat['vektor'] = uj_adat.szoveg.apply(hangulat_textblob)
-    uj_adat['cimke'] = uj_adat.vektor.apply(cimkezes_textblob)
-    uj_adat['ere'] = y
-    uj_adat[['vektor','cimke', 'ere']].to_csv('kesz.csv')
+    uj_adat['vektor'] = uj_adat.szoveg.apply(hangulat_vader)
+    uj_adat['cimke'] = uj_adat.vektor.apply(cimkezes_vader)
 
     # Afinn
     scores = [afn.score(a) for a in uj_adat['szoveg']]

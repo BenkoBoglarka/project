@@ -60,32 +60,16 @@ import contractions
 from collections import Counter
 
 # Feldolgozas
-def feldolgozas(sent):
+def feldolgozas(mondat):
     lemmatizer = WordNetLemmatizer()
-    uj_mondat = []
-    
-    for szo in sent:
-        if 'http' in szo:
-            szo = ''
-        if '@' in szo:
-            szo = ''
-        szo = re.sub('``', '', szo)
-        szo = re.sub(r"^br$", '', szo)
-
-        szo = re.sub(r"^hav$", 'have', szo)
-        uj_mondat.append(szo)
-    
-    while("" in uj_mondat):
-        uj_mondat.remove("")
-
-    uj_mondat = " ".join(uj_mondat)
-
-    uj_mondat = word_tokenize(uj_mondat)
+    mondat = re.sub('``', '', mondat)
+    mondat = re.sub(r"^br$", '', mondat)
+    mondat = re.sub(r"^hav$", 'have', mondat)
+    mondat = word_tokenize(mondat)
     pos_szotar = {'J':wordnet.ADJ, 'V':wordnet.VERB, 'N':wordnet.NOUN, 'R':wordnet.ADV}
-    uj_mondat = pos_tag(uj_mondat)
+    mondat = pos_tag(mondat)
     kesz = []
-    for szo, tag in uj_mondat:
-
+    for szo, tag in mondat:
             if not pos_szotar.get(tag[0]):
                 lemma =szo
             else:
@@ -117,7 +101,6 @@ def ossze_allitas():
         sent = contractions.fix(sent)
         sent = sent.lower()
         sent = re.sub(r"[^A-Za-z]", " ", sent)
-        sent = tweettok.tokenize(sent)
         sent = feldolgozas(sent)
         sent = " ".join(sent)
         tokens.append(sent)

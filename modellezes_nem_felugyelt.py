@@ -65,7 +65,7 @@ def modell_felallitasa():
     # Word2Vec felállítása
     w2v = Word2Vec(
         min_count=2, 
-        window=2, 
+        window=3, 
         vector_size=500, 
         workers=3,
         sg=1,
