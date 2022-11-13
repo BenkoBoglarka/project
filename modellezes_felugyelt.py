@@ -16,7 +16,7 @@ https://regenerativetoday.com/sentiment-analysis-using-countvectorizer-scikit-le
 Logistic Regression:
 https://stats.stackexchange.com/questions/184017/how-to-fix-non-convergence-in-logisticregressioncv
 https://regenerativetoday.com/sentiment-analysis-using-countvectorizer-scikit-learn/
-Logistic Regression https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
+https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
 """
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -37,9 +37,9 @@ def modell_felallitasa():
         shuffle=True)
     
     # CountVectorizer
-    vektorizer = CountVectorizer(ngram_range=(1,2))
-    tanulo = vektorizer.fit_transform(x_tanulo)
-    tesztelo = vektorizer.transform(x_tesztelo)
+    vectorizer = CountVectorizer(ngram_range=(1,2))
+    tanulo = vectorizer.fit_transform(x_tanulo)
+    tesztelo = vectorizer.transform(x_tesztelo)
 
     # Logistic Regression
     modell = LogisticRegression(random_state=42,max_iter=4000, solver="saga", C=0.1, penalty='elasticnet', l1_ratio=0)
@@ -48,6 +48,18 @@ def modell_felallitasa():
     
     # Pontosság
     print(accuracy_score(y_tesztelo,elorejelzes))
+
+    # mondatok becslése
+    mondat = [ 
+        "I really like the smell of the rain", 
+        "Never go to this restaurant, it's a horrible, horrible place!", 
+        "He is really clever, he managed to get into one of the most famous university in the entire world",
+        "There is no positive effect of this medicine, totally useless"
+    ]
+    mondatok = pd.DataFrame()
+    mondatok['szoveg'] = mondat
+    mondatok['cimke'] = modell.predict(vectorizer.transform( mondatok.szoveg))
+    print(mondatok)
 
 if __name__== "__main__":
     modell_felallitasa()

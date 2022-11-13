@@ -57,17 +57,17 @@ def modell_felallitasa():
     # Phrases
     bigram = Phrases(x)
 
-    #Cimkezes
+    #Cimkezes Textblob and Vader
     uj_adat = pd.DataFrame()
     uj_adat['szoveg'] = bigram[x]
-    uj_adat['vektor'] = uj_adat.szoveg.apply(hangulat_vader)
-    uj_adat['cimke'] = uj_adat.vektor.apply(cimkezes_vader)
+    # uj_adat['vektor'] = uj_adat.szoveg.apply(hangulat_textblob)
+    # uj_adat['cimke'] = uj_adat.vektor.apply(cimkezes_textblob)
 
     # Afinn
     scores = [afn.score(a) for a in uj_adat['szoveg']]
     sentiment = ['positive' if score > 0 else 'negative' for score in scores]
-    # uj_adat['vektor'] = scores
-    # uj_adat['cimke'] = sentiment
+    uj_adat['vektor'] = scores
+    uj_adat['cimke'] = sentiment
 
     # Pontosság
     print(accuracy_score(y,uj_adat['cimke']))
