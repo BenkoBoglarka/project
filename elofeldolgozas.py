@@ -2,37 +2,28 @@
 FORRÁSOK:
 Python szerkezet:
 https://realpython.com/python-main-function/
-
 CSV betöltése:
 https://www.geeksforgeeks.org/how-to-do-train-test-split-using-sklearn-in-python/
-
 Tokenizáció:
 https://towardsdatascience.com/an-introduction-to-tweettokenizer-for-processing-tweets-9879389f8fe7
-
 Rövidítések eltávolítása:
 https://stackoverflow.com/questions/45244813/how-can-i-make-a-regex-match-the-entire-string
 https://www.kaggle.com/code/nareyko/google-word2vec-kmeans-pca/notebook
 https://stackoverflow.com/questions/11552877/regex-to-match-exact-phrase-nothing-before-or-after-the-phrase
-
 Kisbetűssé alakítás, pontok, vesszők és egyéb karakterek eltávolítása:
 https://www.kaggle.com/code/nareyko/google-word2vec-kmeans-pca/notebook
-
 Üres elemek eltávolítása:  
 https://www.geeksforgeeks.org/python-remove-empty-strings-from-list-of-strings/
-
 Stop szavak kiszűrése:
 https://www.analyticsvidhya.com/blog/2021/06/rule-based-sentiment-analysis-in-python/
-
 POS és lemmatizeting:
 https://www.geeksforgeeks.org/part-speech-tagging-stop-words-using-nltk-python/ (?)
 https://www.analyticsvidhya.com/blog/2021/06/rule-based-sentiment-analysis-in-python/
 https://www.geeksforgeeks.org/python-lemmatization-with-nltk/ (?)
-
 CSV elmentése:
 https://www.geeksforgeeks.org/python-save-list-to-csv/
 https://www.geeksforgeeks.org/adding-new-column-to-existing-dataframe-in-pandas/
 https://www.geeksforgeeks.org/add-column-names-to-dataframe-in-pandas/
-
 Sorok dobása és hosszúság megállapítása:
 https://stackoverflow.com/questions/37335598/how-to-get-the-length-of-a-cell-value-in-pandas-dataframe
 https://www.geeksforgeeks.org/drop-rows-from-the-dataframe-based-on-certain-condition-applied-on-a-column/
@@ -117,15 +108,6 @@ def ossze_allitas():
     tokens2 = tokens2[tokens2['hossz']> 1]
     tokens2[['szoveg', 'cimke']].to_csv('feldolgozott_adat.csv')
 
-def bla():
-    adat = pd.read_csv('feldolgozott.csv')
-    x = adat['szoveg']
-    y = adat['cimke']
-    aa= adat.loc[(adat['cimke'] == 'positive'),'szoveg']
-    spit = " ".join(aa).split()
-    counter = Counter(spit)
-    most = counter.most_common(100)
-    print(most)
 if __name__== "__main__":
     #bla()
     ossze_allitas()

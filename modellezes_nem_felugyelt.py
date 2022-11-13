@@ -2,41 +2,31 @@
 FORRÁSOK:
 Python szerkezet:
 https://realpython.com/python-main-function/
-
 CSV betöltése:
 https://www.geeksforgeeks.org/how-to-do-train-test-split-using-sklearn-in-python/
-
 word2vec felállítása, edzése, szókincs:
 https://www.kaggle.com/code/pierremegret/gensim-word2vec-tutorial/notebook
 https://medium.com/swlh/sentiment-classification-using-word-embeddings-word2vec-aedf28fbb8ca
-
 Tokenizer:
 https://towardsdatascience.com/an-introduction-to-tweettokenizer-for-processing-tweets-9879389f8fe7
-
 word2vec mentése és előhívása:
 https://medium.com/swlh/sentiment-classification-using-word-embeddings-word2vec-aedf28fbb8ca
-
 Vektorok megadása (vektorok_kiszamitasa()):
 https://www.kaggle.com/code/nareyko/google-word2vec-kmeans-pca/notebook
 https://stackoverflow.com/questions/66868221/gensim-3-8-0-to-gensim-4-0-0
-
 Mondatok felcímkézése:
 https://towardsdatascience.com/unsupervised-sentiment-analysis-a38bf1906483
 https://www.kaggle.com/code/nareyko/google-word2vec-kmeans-pca/notebook
 https://stackoverflow.com/questions/30301922/how-to-check-if-a-key-exists-in-a-word2vec-trained-model-or-not
 https://www.analyticsvidhya.com/blog/2021/06/rule-based-sentiment-analysis-in-python/
-
 Címkék átalakítása:
 https://www.analyticsvidhya.com/blog/2021/06/rule-based-sentiment-analysis-in-python/
-
 Pontosság:
 https://medium.com/@himanshuit3036/supervised-learning-methods-using-python-bb85b8c4e0b7
-
 KMeans modell felállítása:
 https://www.kaggle.com/code/nareyko/google-word2vec-kmeans-pca/notebook
 https://www.analyticsvidhya.com/blog/2021/06/rule-based-sentiment-analysis-in-python/
 https://towardsdatascience.com/unsupervised-sentiment-analysis-a38bf1906483
-
 Phrases:
 https://radimrehurek.com/gensim/models/word2vec.html
 """
@@ -101,14 +91,12 @@ def modell_felallitasa():
         y,
         random_state=42, 
         test_size=0.20,
-        shuffle=True)
+        shuffle=False)
 
     mondatok = pd.DataFrame()
     mondatok['mondat'] = x_tanulo
-    mondatok = mondatok.reset_index(drop=True)
     mondatok['vektor'] = mondatok.mondat.apply(vektorok_kiszamitasa)
     mondatok_2 = pd.DataFrame()
-    mondatok_2 = mondatok_2.reset_index(drop=True)
     mondatok_2['mondat'] = x_tesztelo
     mondatok_2['vektor'] = mondatok_2.mondat.apply(vektorok_kiszamitasa)
     teszteloo = pd.DataFrame(y_tesztelo).reset_index(drop=True)
@@ -117,7 +105,7 @@ def modell_felallitasa():
     tanulo_halmaz = np.concatenate(mondatok['vektor'].values)
     tesztelo_halmaz = np.concatenate(mondatok_2['vektor'].values)
 
-    kmeans = KMeans(n_clusters=2, max_iter=1000,random_state=True,n_init=50)
+    kmeans = KMeans(n_clusters=2, max_iter=1000,random_state=42,n_init=50)
     kmeans.fit(tanulo_halmaz)
     mondatok_2['kategoria'] = kmeans.predict(tesztelo_halmaz)
 
@@ -129,8 +117,22 @@ def modell_felallitasa():
     mondatok_2['eredeti'] = teszteloo
    
     # Pontosság
-    pontossag = accuracy_score(teszteloo,mondatok_2['cimke'])
+    pontossag = accuracy_score(y_tesztelo,mondatok_2['cimke'])
     print(pontossag)
+
+    # tanulo_mondatok becslése
+    mondat = [ 
+        "I really like the smell of the rain", 
+        "Never go to this restaurant, it's a horrible, horrible place!", 
+        "He is really clever, he managed to get into one of the most famous university in the entire world",
+        "There is no positive effect of this medicine, totally useless"
+    ]
+    mondat_becsles = pd.DataFrame()
+    mondat_becsles['szoveg'] = bigram[mondat]
+    mondat_becsles['vektor'] = mondat_becsles.szoveg.apply(vektorok_kiszamitasa)
+    mondat_becsles['kategoria'] = kmeans.predict(np.concatenate(mondat_becsles['vektor'].values))
+    mondat_becsles['cimke'] = mondat_becsles.kategoria.apply(cimkek_atalakitasa)
+    print(mondat_becsles)
 
 if __name__== "__main__":
     modell_felallitasa()
