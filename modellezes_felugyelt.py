@@ -26,7 +26,7 @@ from sklearn.metrics import accuracy_score
 
 def modell_felallitasa():
     # CSV betöltése, adathalmaz felosztása:
-    adat = pd.read_csv('feldolgozott_adat.csv')
+    adat = pd.read_csv('feldolgozott_adat_10nem.csv')
     x = adat['szoveg']
     y = adat['cimke']
     x_tanulo, x_tesztelo, y_tanulo, y_tesztelo = train_test_split(

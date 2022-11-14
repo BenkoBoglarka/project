@@ -50,7 +50,7 @@ def cimkezes_vader(pont):
 
 def modell_felallitasa():
     # CSV betöltése, adathalmaz felosztása:
-    adat = pd.read_csv('feldolgozott_adat.csv')
+    adat = pd.read_csv('feldolgozott_adat_10.csv')
     x = adat['szoveg']
     y = adat['cimke']
 

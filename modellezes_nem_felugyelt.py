@@ -12,19 +12,19 @@ https://towardsdatascience.com/an-introduction-to-tweettokenizer-for-processing-
 word2vec mentése és előhívása:
 https://medium.com/swlh/sentiment-classification-using-word-embeddings-word2vec-aedf28fbb8ca
 Vektorok megadása (vektorok_kiszamitasa()):
-https://www.kaggle.com/code/nareyko/google-word2vec-kmeans-pca/notebook
+https://www.kaggle.com/code/nareyko/google-word2vec-ml_modell-pca/notebook
 https://stackoverflow.com/questions/66868221/gensim-3-8-0-to-gensim-4-0-0
 Mondatok felcímkézése:
 https://towardsdatascience.com/unsupervised-sentiment-analysis-a38bf1906483
-https://www.kaggle.com/code/nareyko/google-word2vec-kmeans-pca/notebook
+https://www.kaggle.com/code/nareyko/google-word2vec-ml_modell-pca/notebook
 https://stackoverflow.com/questions/30301922/how-to-check-if-a-key-exists-in-a-word2vec-trained-model-or-not
 https://www.analyticsvidhya.com/blog/2021/06/rule-based-sentiment-analysis-in-python/
 Címkék átalakítása:
 https://www.analyticsvidhya.com/blog/2021/06/rule-based-sentiment-analysis-in-python/
 Pontosság:
 https://medium.com/@himanshuit3036/supervised-learning-methods-using-python-bb85b8c4e0b7
-KMeans modell felállítása:
-https://www.kaggle.com/code/nareyko/google-word2vec-kmeans-pca/notebook
+ml_modell modell felállítása:
+https://www.kaggle.com/code/nareyko/google-word2vec-ml_modell-pca/notebook
 https://www.analyticsvidhya.com/blog/2021/06/rule-based-sentiment-analysis-in-python/
 https://towardsdatascience.com/unsupervised-sentiment-analysis-a38bf1906483
 Phrases:
@@ -35,13 +35,14 @@ from gensim.models import Word2Vec
 from nltk.tokenize import word_tokenize
 import numpy as np
 from sklearn.metrics import accuracy_score
-from sklearn.cluster import KMeans
+from sklearn.cluster import ml_modell,AffinityPropagation,AgglomerativeClustering, Birch, MeanShift, SpectralClustering
+from sklearn.mixture import GaussianMixture
 from gensim.models import Phrases
 from sklearn.model_selection import train_test_split
-
+import winsound
 def modell_felallitasa():
     # csv betöltése
-    adat = pd.read_csv("feldolgozott_adat.csv")
+    adat = pd.read_csv("feldolgozott_adat_10.csv")
     x = adat['szoveg']
     y = adat['cimke']
 
@@ -86,41 +87,24 @@ def modell_felallitasa():
         else:
             return 'positive'
     
-    x_tanulo, x_tesztelo, y_tanulo, y_tesztelo = train_test_split(
-        bigram[tokenek],
-        y,
-        random_state=42, 
-        test_size=0.20,
-        shuffle=False)
-
     mondatok = pd.DataFrame()
-    mondatok['mondat'] = x_tanulo
+    mondatok['mondat'] = bigram[tokenek]
     mondatok['vektor'] = mondatok.mondat.apply(vektorok_kiszamitasa)
-    mondatok_2 = pd.DataFrame()
-    mondatok_2['mondat'] = x_tesztelo
-    mondatok_2['vektor'] = mondatok_2.mondat.apply(vektorok_kiszamitasa)
-    teszteloo = pd.DataFrame(y_tesztelo).reset_index(drop=True)
+    teszteloo = pd.DataFrame(y).reset_index(drop=True)
+    tesztelo_halmaz = np.concatenate(mondatok['vektor'].values)
 
-    # KMeans modell felállítása
-    tanulo_halmaz = np.concatenate(mondatok['vektor'].values)
-    tesztelo_halmaz = np.concatenate(mondatok_2['vektor'].values)
-
-    kmeans = KMeans(n_clusters=2, max_iter=1000,random_state=42,n_init=50)
-    kmeans.fit(tanulo_halmaz)
-    mondatok_2['kategoria'] = kmeans.predict(tesztelo_halmaz)
-
-    # mondatok_2['clust_value'] = [1 if i==0 else -1 for i in mondatok_2.kategoria]
-    # mondatok_2['clust_scire']= mondatok_2.vektor.apply(lambda x: 1/(kmeans.transform(x).min()))
-    # mondatok_2['sentiment'] = mondatok_2.clust_scire * mondatok_2.kategoria
-    
-    mondatok_2['cimke'] = mondatok_2.kategoria.apply(cimkek_atalakitasa)
-    mondatok_2['eredeti'] = teszteloo
+    #modell felállítása
+    ml_modell = GaussianMixture(n_components=2, random_state=42,n_init=30, init_params='k-means++')
+    ml_modell.fit(tesztelo_halmaz)
+    mondatok['kategoria'] = ml_modell.predict(tesztelo_halmaz)
+    mondatok['cimke'] = mondatok.kategoria.apply(cimkek_atalakitasa)
+    mondatok['eredeti'] = teszteloo
    
     # Pontosság
-    pontossag = accuracy_score(y_tesztelo,mondatok_2['cimke'])
+    pontossag = accuracy_score(mondatok['eredeti'],mondatok['cimke'])
     print(pontossag)
 
-    # tanulo_mondatok becslése
+    #tanulo_mondatok becslése
     mondat = [ 
         "I really like the smell of the rain", 
         "Never go to this restaurant, it's a horrible, horrible place!", 
@@ -128,10 +112,12 @@ def modell_felallitasa():
         "There is no positive effect of this medicine, totally useless"
     ]
     mondat_becsles = pd.DataFrame()
-    mondat_becsles['szoveg'] = bigram[mondat]
-    mondat_becsles['vektor'] = mondat_becsles.szoveg.apply(vektorok_kiszamitasa)
-    mondat_becsles['kategoria'] = kmeans.predict(np.concatenate(mondat_becsles['vektor'].values))
+    mondat_becsles['szoveg'] = mondat 
+    mondat_becsles['mondat'] = mondat_becsles.szoveg.apply(word_tokenize)
+    mondat_becsles['vektor'] = mondat_becsles.mondat.apply(vektorok_kiszamitasa)
+    mondat_becsles['kategoria'] = ml_modell.fit_predict(np.concatenate(mondat_becsles['vektor'].values))
     mondat_becsles['cimke'] = mondat_becsles.kategoria.apply(cimkek_atalakitasa)
+    winsound.Beep(200, 1000)
     print(mondat_becsles)
 
 if __name__== "__main__":

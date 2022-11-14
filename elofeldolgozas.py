@@ -46,16 +46,27 @@ from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
 from nltk.corpus import wordnet
 from nltk import pos_tag
-from textblob import TextBlob
 import contractions
-from collections import Counter
 
 # Feldolgozas
-def feldolgozas(mondat):
+def feldolgozas(mondat_regi):
     lemmatizer = WordNetLemmatizer()
-    mondat = re.sub('``', '', mondat)
-    mondat = re.sub(r"^br$", '', mondat)
-    mondat = re.sub(r"^hav$", 'have', mondat)
+    mondat =  []
+    mondat_regi = word_tokenize(mondat_regi)
+    for szo in mondat_regi:
+        szo = re.sub(r"^idk$", 'i do not know', szo)
+        szo = re.sub('``', '', szo)
+        szo = re.sub(r"^br$", '', szo)
+        szo = re.sub(r"^nt$", 'not', szo)
+        szo = re.sub(r"^hav$", 'have', szo)
+        szo = re.sub(r"^coz$", 'because', szo)
+        szo = re.sub(r"^its$", 'it is', szo)
+        szo = re.sub(r"^plz$", 'please', szo)
+        szo = re.sub(r"^pls$", 'please', szo)
+        szo = re.sub(r"^aap$", 'app', szo)
+        szo = re.sub(r"^fav$", 'favorite', szo)
+        mondat.append(szo)
+    mondat = " ".join(mondat)
     mondat = word_tokenize(mondat)
     pos_szotar = {'J':wordnet.ADJ, 'V':wordnet.VERB, 'N':wordnet.NOUN, 'R':wordnet.ADV}
     mondat = pos_tag(mondat)
@@ -65,8 +76,8 @@ def feldolgozas(mondat):
                 lemma =szo
             else:
                 lemma = lemmatizer.lemmatize(szo, pos=pos_szotar.get(tag[0]) )
-            if szo not in set(stopwords.words('english')):
-                kesz.append(lemma)
+            #if szo not in set(stopwords.words('english')):
+            kesz.append(lemma)
     return kesz
 
 def ossze_allitas():
@@ -83,7 +94,7 @@ def ossze_allitas():
     #adat.loc[(adat['cimke'] == 3),'cimke'] = 'neutral'
     adat.loc[(adat['cimke'] == 4),'cimke'] = 'positive'
     adat.loc[(adat['cimke'] == 5),'cimke'] = 'positive'
-   # adat = pd.concat((adat.loc[(adat['cimke'] == 'positive')].sample(n=30000),adat.loc[(adat['cimke'] == 'negative')].sample(n=30000)))
+    adat = pd.concat((adat.loc[(adat['cimke'] == 'positive')].sample(n=10000),adat.loc[(adat['cimke'] == 'negative')].sample(n=10000)))
     x = adat['szoveg']
     y = adat['cimke']
     
@@ -106,7 +117,7 @@ def ossze_allitas():
     tokens2 = tokens2.reset_index(drop=True)
     tokens2['hossz'] = tokens2['szoveg'].str.len()
     tokens2 = tokens2[tokens2['hossz']> 1]
-    tokens2[['szoveg', 'cimke']].to_csv('feldolgozott_adat.csv')
+    tokens2[['szoveg', 'cimke']].to_csv('feldolgozott_adat_10nem.csv')
 
 if __name__== "__main__":
     #bla()
