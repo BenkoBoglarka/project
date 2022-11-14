@@ -35,7 +35,6 @@ from gensim.models import Word2Vec
 from nltk.tokenize import word_tokenize
 import numpy as np
 from sklearn.metrics import accuracy_score
-from sklearn.cluster import ml_modell,AffinityPropagation,AgglomerativeClustering, Birch, MeanShift, SpectralClustering
 from sklearn.mixture import GaussianMixture
 from gensim.models import Phrases
 from sklearn.model_selection import train_test_split
@@ -94,7 +93,7 @@ def modell_felallitasa():
     tesztelo_halmaz = np.concatenate(mondatok['vektor'].values)
 
     #modell felállítása
-    ml_modell = GaussianMixture(n_components=2, random_state=42,n_init=30, init_params='k-means++')
+    ml_modell = GaussianMixture(n_components=2, random_state=42, init_params='k-means++')
     ml_modell.fit(tesztelo_halmaz)
     mondatok['kategoria'] = ml_modell.predict(tesztelo_halmaz)
     mondatok['cimke'] = mondatok.kategoria.apply(cimkek_atalakitasa)
