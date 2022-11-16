@@ -23,10 +23,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
-from sklearn.preprocessing import StandardScaler
-from nltk.tokenize import word_tokenize
-from sklearn.svm import SVC
-from elofeldolgozas import feldolgozas
+from adat_feldolgozas import feldolgozas
 
 def modell_felallitasa():
     # CSV betöltése, adathalmaz felosztása:
@@ -46,12 +43,11 @@ def modell_felallitasa():
     tesztelo = vectorizer.transform(x_tesztelo)
 
     # Logistic Regression
-    #modell = LogisticRegression(random_state=0,max_iter=1000, solver="saga", C=0.6, penalty='elasticnet', l1_ratio=0)
-    modell = SVC(kernel='linear')
+    modell = LogisticRegression(random_state=0,max_iter=1000, solver="saga", C=0.6, penalty='elasticnet', l1_ratio=0)
     modell.fit(tanulo, y_tanulo)
     elorejelzes = modell.predict(tesztelo)
     
-    #Pontosság
+    # Pontosság
     print(accuracy_score(y_tesztelo,elorejelzes))
 
     # mondatok becslése
@@ -63,8 +59,7 @@ def modell_felallitasa():
     ]
     mondat_becsles = pd.DataFrame(mondat) 
     mondat_becsles['mondat'] = mondat_becsles.apply(feldolgozas)
-    mondat_becsles['tokenized'] = mondat_becsles.mondat.apply(word_tokenize)
-    mondat_becsles['cimke'] = modell.predict(vectorizer.transform( mondat_becsles.tokenized))
+    mondat_becsles['cimke'] = modell.predict(vectorizer.transform( mondat_becsles.mondat))
     print(mondat_becsles)
 
 if __name__== "__main__":

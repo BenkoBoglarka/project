@@ -46,10 +46,9 @@ from nltk.tokenize import word_tokenize
 import numpy as np
 from sklearn.metrics import accuracy_score
 from sklearn.cluster import KMeans
-from sklearn.mixture import GaussianMixture
 from gensim.models import Phrases
 from sklearn.preprocessing import StandardScaler
-from elofeldolgozas import feldolgozas
+from adat_feldolgozas import feldolgozas
 
 def modell_felallitasa():
     # csv betöltése
@@ -85,12 +84,22 @@ def modell_felallitasa():
     w2v.save("modell.model")
 
     # Word2Vec előhívása
-    #w2v = Word2Vec.load("modell.model")
+    w2v = Word2Vec.load("modell.model")
 
     # Vektorok megadása
     def vektorok_kiszamitasa(mondat):
-        return np.mean([w2v.wv[x] for x in mondat if x in w2v.wv.key_to_index], axis=0).reshape(1,-1)
-
+        vektorok = []
+        for szo in mondat:
+            if szo in w2v.wv.key_to_index:
+                vektorok.append(w2v.wv[szo])
+            else:
+                """
+                ha egyik szó nem szerepel a szótárban, 
+                akkor egy nullásokból álló array kerül annak a mondatnak a vektorába a helyére
+                """
+                vektorok.append(np.zeros(500,dtype=int))
+        return np.mean(vektorok, axis=0).reshape(1,-1)
+        
     # Címkék átalakítása
     def cimkek_atalakitasa(vektor):
         if vektor==0:
@@ -102,10 +111,9 @@ def modell_felallitasa():
     mondatok['mondat'] = bigram[tokenek]
     mondatok['vektor'] = mondatok.mondat.apply(vektorok_kiszamitasa)
     teszteloo = pd.DataFrame(y).reset_index(drop=True)
-    tesztelo_halmaz = np.concatenate(mondatok['vektor'].values)
-
+    tesztelo_halmaz = np.concatenate(mondatok['vektor'].values )
+    
     #modell felállítása
-    #ml_modell = GaussianMixture(n_components=2, random_state=42)
     ml_modell = KMeans(n_clusters=2, random_state=42)
     sc = StandardScaler()
     tesztelo_halmaz = sc.fit_transform(tesztelo_halmaz)
@@ -133,6 +141,7 @@ def modell_felallitasa():
     mondat_becsles['kategoria'] = ml_modell.fit_predict(np.concatenate(mondat_becsles['vektor'].values))
     mondat_becsles['cimke'] = mondat_becsles.kategoria.apply(cimkek_atalakitasa)
     print(mondat_becsles[['mondat','cimke']])
+    
 
 if __name__== "__main__":
     modell_felallitasa()

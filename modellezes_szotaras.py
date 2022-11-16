@@ -21,8 +21,7 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from textblob import TextBlob
 from afinn import Afinn
 from gensim.models import Phrases
-from nltk.tokenize import word_tokenize
-from elofeldolgozas import feldolgozas
+from adat_feldolgozas import feldolgozas
 
 afn = Afinn()
 # hangulat TextBlob
@@ -34,7 +33,6 @@ def hangulat_vader(mondat):
     analyzer = SentimentIntensityAnalyzer()
     vader = analyzer.polarity_scores(mondat)
     return vader['compound']
-
 
 # Cimkezes
 def cimkezes_textblob(pont):
@@ -71,29 +69,29 @@ def modell_felallitasa():
     uj_adat['vektor'] = scores
     uj_adat['cimke'] = sentiment
 
-    # Pontosság
-    print(accuracy_score(y,uj_adat['cimke']))
-
-def mondatok_becslese():
     mondat = [ 
         "I really like the smell of the rain", 
         "Never go to this restaurant, it's a horrible, horrible place!", 
         "He is really clever, he managed to get into one of the most famous university in the entire world",
         "There is no positive effect of this medicine, totally useless"
     ]
+    # Mondatok becslése
     mondat_becsles = pd.DataFrame(mondat) 
     mondat_becsles['mondat'] = mondat_becsles.apply(feldolgozas)
-    mondat_becsles['tokenized'] = mondat_becsles.mondat.apply(word_tokenize)
-    mondat_becsles['vektor'] = mondatok_becslese.tokenized.apply(hangulat_textblob)
-    mondat_becsles['cimke'] = mondatok_becslese.vektor.apply(cimkezes_textblob)
+    mondat_becsles['vektor'] = mondat_becsles.mondat.apply(hangulat_textblob)
+    mondat_becsles['cimke'] = mondat_becsles.vektor.apply(cimkezes_textblob)
     
     # Afinn
-    scores = [afn.score(a) for a in mondatok_becslese['szoveg']]
+    scores = [afn.score(a) for a in mondat_becsles['mondat']]
     sentiment = ['positive' if score > 0 else 'negative' for score in scores]
     # mondat_becslese['vektor'] = scores
     # mondat_becslese['cimke'] = sentiment
 
-    print(mondatok_becslese[['szoveg','cimke']])
+    # Pontosság
+    print(accuracy_score(y,uj_adat['cimke']))
+    # Mondatok
+    print(mondat_becsles[['mondat','cimke']])
+
 
 if __name__== "__main__":
     modell_felallitasa()
