@@ -23,30 +23,55 @@ from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import GridSearchCV
+from sklearn.preprocessing import StandardScaler
+from nltk.tokenize import word_tokenize
+from sklearn.svm import SVC
+from elofeldolgozas import feldolgozas
 
 def modell_felallitasa():
     # CSV betöltése, adathalmaz felosztása:
-    adat = pd.read_csv('feldolgozott_adat_10nem.csv')
+    adat = pd.read_csv('feldolgozott_adat.csv')
     x = adat['szoveg']
     y = adat['cimke']
     x_tanulo, x_tesztelo, y_tanulo, y_tesztelo = train_test_split(
         x,
         y,
         random_state=42, 
-        test_size=0.20,
+        test_size=0.25,
         shuffle=True)
     
     # CountVectorizer
     vectorizer = CountVectorizer(ngram_range=(1,2))
     tanulo = vectorizer.fit_transform(x_tanulo)
+    # sc = StandardScaler()
+    # tanulo= sc.fit_transform(tanulo)
     tesztelo = vectorizer.transform(x_tesztelo)
-
+    parameters = {
+        'penalty':['elasticnet', 'l1', 'l2','none'],
+        'C':[0.01],
+        'dual':[False],
+        'fit_intercept':[False,True],
+        'class_weight':['balanced'],
+        'random_state':[0,42],
+        'solver':['saga','sag', 'liblinear','lbfgs' ],
+        'l1_ratio':[0,1,0.5,0.01,0.1]
+    }
     # Logistic Regression
-    modell = LogisticRegression(random_state=42,max_iter=4000, solver="saga", C=0.1, penalty='elasticnet', l1_ratio=0)
+    #modell = LogisticRegression(random_state=0,max_iter=1000, solver="saga", C=0.6, penalty='elasticnet', l1_ratio=0)
+    #modell = LogisticRegression(random_state=0,max_iter=100, solver="saga", C=0.1, penalty='elasticnet', l1_ratio=0, verbose=0, class_weight='balanced', dual=False,fit_intercept=False)
+   # modell = LogisticRegression(random_state=0,max_iter=100, solver="saga", C=0.01, penalty='none', l1_ratio=0, fit_intercept=False,class_weight='balanced', dual=False)
+    modell = SVC(kernel='linear')
+    # grid = GridSearchCV(estimator=LogisticRegression(), param_grid=parameters, cv=2)
+    # grid.fit(tanulo, y_tanulo)
+    # print(grid.best_params_)
+    # print(grid.best_score_)
+    
     modell.fit(tanulo, y_tanulo)
     elorejelzes = modell.predict(tesztelo)
     
-    # Pontosság
+    #Pontosság
     print(accuracy_score(y_tesztelo,elorejelzes))
 
     # mondatok becslése
@@ -56,10 +81,11 @@ def modell_felallitasa():
         "He is really clever, he managed to get into one of the most famous university in the entire world",
         "There is no positive effect of this medicine, totally useless"
     ]
-    mondatok = pd.DataFrame()
-    mondatok['szoveg'] = mondat
-    mondatok['cimke'] = modell.predict(vectorizer.transform( mondatok.szoveg))
-    print(mondatok)
+    mondat_becsles = pd.DataFrame(mondat) 
+    mondat_becsles['mondat'] = mondat_becsles.apply(feldolgozas)
+    mondat_becsles['tokenized'] = mondat_becsles.mondat.apply(word_tokenize)
+    mondat_becsles['cimke'] = modell.predict(vectorizer.transform( mondat_becsles.tokenized))
+    print(mondat_becsles)
 
 if __name__== "__main__":
     modell_felallitasa()

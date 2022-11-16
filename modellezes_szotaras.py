@@ -21,6 +21,8 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from textblob import TextBlob
 from afinn import Afinn
 from gensim.models import Phrases
+from nltk.tokenize import word_tokenize
+from elofeldolgozas import feldolgozas
 
 afn = Afinn()
 # hangulat TextBlob
@@ -50,7 +52,7 @@ def cimkezes_vader(pont):
 
 def modell_felallitasa():
     # CSV betöltése, adathalmaz felosztása:
-    adat = pd.read_csv('feldolgozott_adat_10.csv')
+    adat = pd.read_csv('feldolgozott_adat.csv')
     x = adat['szoveg']
     y = adat['cimke']
 
@@ -79,18 +81,19 @@ def mondatok_becslese():
         "He is really clever, he managed to get into one of the most famous university in the entire world",
         "There is no positive effect of this medicine, totally useless"
     ]
-    mondatok = pd.DataFrame()
-    mondatok['szoveg'] = mondat
-    mondatok['vektor'] = mondatok.szoveg.apply(hangulat_textblob)
-    mondatok['cimke'] = mondatok.vektor.apply(cimkezes_textblob)
+    mondat_becsles = pd.DataFrame(mondat) 
+    mondat_becsles['mondat'] = mondat_becsles.apply(feldolgozas)
+    mondat_becsles['tokenized'] = mondat_becsles.mondat.apply(word_tokenize)
+    mondat_becsles['vektor'] = mondatok_becslese.tokenized.apply(hangulat_textblob)
+    mondat_becsles['cimke'] = mondatok_becslese.vektor.apply(cimkezes_textblob)
     
     # Afinn
-    scores = [afn.score(a) for a in mondatok['szoveg']]
+    scores = [afn.score(a) for a in mondatok_becslese['szoveg']]
     sentiment = ['positive' if score > 0 else 'negative' for score in scores]
-    # mondatok['vektor'] = scores
-    # mondatok['cimke'] = sentiment
+    # mondat_becslese['vektor'] = scores
+    # mondat_becslese['cimke'] = sentiment
 
-    print(mondatok[['szoveg','cimke']])
+    print(mondatok_becslese[['szoveg','cimke']])
 
 if __name__== "__main__":
     modell_felallitasa()
