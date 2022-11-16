@@ -24,8 +24,6 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import GridSearchCV
-from sklearn.preprocessing import StandardScaler
 from nltk.tokenize import word_tokenize
 from sklearn.svm import SVC
 from elofeldolgozas import feldolgozas
@@ -45,29 +43,11 @@ def modell_felallitasa():
     # CountVectorizer
     vectorizer = CountVectorizer(ngram_range=(1,2))
     tanulo = vectorizer.fit_transform(x_tanulo)
-    # sc = StandardScaler()
-    # tanulo= sc.fit_transform(tanulo)
     tesztelo = vectorizer.transform(x_tesztelo)
-    parameters = {
-        'penalty':['elasticnet', 'l1', 'l2','none'],
-        'C':[0.01],
-        'dual':[False],
-        'fit_intercept':[False,True],
-        'class_weight':['balanced'],
-        'random_state':[0,42],
-        'solver':['saga','sag', 'liblinear','lbfgs' ],
-        'l1_ratio':[0,1,0.5,0.01,0.1]
-    }
+
     # Logistic Regression
     #modell = LogisticRegression(random_state=0,max_iter=1000, solver="saga", C=0.6, penalty='elasticnet', l1_ratio=0)
-    #modell = LogisticRegression(random_state=0,max_iter=100, solver="saga", C=0.1, penalty='elasticnet', l1_ratio=0, verbose=0, class_weight='balanced', dual=False,fit_intercept=False)
-   # modell = LogisticRegression(random_state=0,max_iter=100, solver="saga", C=0.01, penalty='none', l1_ratio=0, fit_intercept=False,class_weight='balanced', dual=False)
     modell = SVC(kernel='linear')
-    # grid = GridSearchCV(estimator=LogisticRegression(), param_grid=parameters, cv=2)
-    # grid.fit(tanulo, y_tanulo)
-    # print(grid.best_params_)
-    # print(grid.best_score_)
-    
     modell.fit(tanulo, y_tanulo)
     elorejelzes = modell.predict(tesztelo)
     
