@@ -112,7 +112,7 @@ def modell_felallitasa():
     ml_modell.fit(becsles_halmaz)
     mondat_becsles['kategoria'] = ml_modell.predict(becsles_halmaz)
     mondat_becsles['cimke'] = mondat_becsles.kategoria.apply(cimkek_atalakitasa)
-    print(mondat_becsles[['szoveg','cimke']][2])
+    print(mondat_becsles[['szoveg','cimke']])
  
     # ROC görbe megalkotása és AUC érték kinyomtatása
     teves_pozitiv_rata, valodi_pozitiv_rata, ertekhatarok = roc_curve(tesztelo, roc[:,1])
