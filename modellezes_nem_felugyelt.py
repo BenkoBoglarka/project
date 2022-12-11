@@ -130,3 +130,4 @@ def modell_felallitasa():
  
 if __name__== "__main__":
     modell_felallitasa()
+ 

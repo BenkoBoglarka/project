@@ -45,34 +45,20 @@ def afinn(elemzes, y, mondatok_becsles):
     utána pedig megadja a címkék értékét: 
     hogyha a vektor 0-nál kisebb értékű, akkor negatív, ellenkező esetben pozitív
     """
-
+ 
     scores = [afn.score(a) for a in elemzes['szoveg']]
     sentiment = [1 if score > 0 else 0 for score in scores]
     elemzes['vektor'] = scores
     elemzes['cimke'] = sentiment
-
+ 
     # Afinn szótár becslése az példamondatokra
     scores = [afn.score(a) for a in mondatok_becsles['mondat']]
     sentiment = [1 if score > 0 else 0 for score in scores]
     mondatok_becsles['vektor'] = scores
     mondatok_becsles['cimke'] = sentiment
-
-    kiertekeles(elemzes,y,mondatok_becsles)
-
-def Vader_TextBlob(elemzes, y, mondatok_becsles, cimkezes, hangulat):
-    mondatok_becsles['vektor'] = mondatok_becsles.mondat.apply(hangulat)
-    mondatok_becsles['cimke'] = mondatok_becsles.vektor.apply(cimkezes)
-
-    # Cimkézés 
-    elemzes['vektor'] = elemzes.szoveg.apply(hangulat)
-    elemzes['cimke'] = elemzes.vektor.apply(cimkezes)
  
-    # Példa mondatok betöltése, feldolgozása
-    mondatok_becsles = pd.DataFrame(pelda_mondatok) 
-    mondatok_becsles['mondat'] = mondatok_becsles.apply(feldolgozas)
-    
-    kiertekeles(elemzes, y, mondatok_becsles)
-
+    kiertekeles(elemzes,y,mondatok_becsles)
+ 
 def kiertekeles(elemzes, y, mondatok_becsles):
     # Kinyomtatni a mondatok becslésének eredményét
     print(mondatok_becsles[['mondat','cimke']])
@@ -110,10 +96,20 @@ def modell_felallitasa():
  
     print("Afinn eredménye:")
     afinn(elemzes, y, mondatok_becsles)
-    print("Vader eredménye:")
-    Vader_TextBlob(elemzes, y, mondatok_becsles, cimkezes_vader, hangulat_vader)
-    print("TextBlob eredménye:")
-    Vader_TextBlob(elemzes, y, mondatok_becsles, cimkezes_textblob, hangulat_textblob)
 
+    print("Vader eredménye:")
+    elemzes['vektor'] = elemzes.szoveg.apply(hangulat_vader)
+    elemzes['cimke'] = elemzes.vektor.apply(cimkezes_vader)
+    mondatok_becsles['vektor'] = mondatok_becsles.mondat.apply(hangulat_vader)
+    mondatok_becsles['cimke'] = mondatok_becsles.vektor.apply(cimkezes_vader)
+    kiertekeles(elemzes, y, mondatok_becsles)
+
+    print("TextBlob eredménye:")
+    elemzes['vektor'] = elemzes.szoveg.apply(hangulat_textblob)
+    elemzes['cimke'] = elemzes.vektor.apply(cimkezes_textblob)
+    mondatok_becsles['vektor'] = mondatok_becsles.mondat.apply(hangulat_textblob)
+    mondatok_becsles['cimke'] = mondatok_becsles.vektor.apply(cimkezes_textblob)
+    kiertekeles(elemzes, y, mondatok_becsles)
+ 
 if __name__== "__main__":
     modell_felallitasa()
