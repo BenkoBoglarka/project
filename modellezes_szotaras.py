@@ -1,5 +1,4 @@
 import pandas as pd
-import matplotlib.pyplot as plt
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from textblob import TextBlob
 from afinn import Afinn
@@ -39,6 +38,61 @@ def cimkezes_vader(pont):
     else:
         return 1 # pozitív
  
+def afinn(elemzes, y, mondatok_becsles):
+    """
+    Afinn szótár alkalmazása mondat becslésre:
+    megadja az egyes sorokhoz tartozó szavak szótári értékei alapján számított hangulati értéket, 
+    utána pedig megadja a címkék értékét: 
+    hogyha a vektor 0-nál kisebb értékű, akkor negatív, ellenkező esetben pozitív
+    """
+
+    scores = [afn.score(a) for a in elemzes['szoveg']]
+    sentiment = [1 if score > 0 else 0 for score in scores]
+    elemzes['vektor'] = scores
+    elemzes['cimke'] = sentiment
+
+    # Afinn szótár becslése az példamondatokra
+    scores = [afn.score(a) for a in mondatok_becsles['mondat']]
+    sentiment = [1 if score > 0 else 0 for score in scores]
+    mondatok_becsles['vektor'] = scores
+    mondatok_becsles['cimke'] = sentiment
+
+    kiertekeles(elemzes,y,mondatok_becsles)
+
+def Vader_TextBlob(elemzes, y, mondatok_becsles, cimkezes, hangulat):
+    mondatok_becsles['vektor'] = mondatok_becsles.mondat.apply(hangulat)
+    mondatok_becsles['cimke'] = mondatok_becsles.vektor.apply(cimkezes)
+
+    # Cimkézés 
+    elemzes['vektor'] = elemzes.szoveg.apply(hangulat)
+    elemzes['cimke'] = elemzes.vektor.apply(cimkezes)
+ 
+    # Példa mondatok betöltése, feldolgozása
+    mondatok_becsles = pd.DataFrame(pelda_mondatok) 
+    mondatok_becsles['mondat'] = mondatok_becsles.apply(feldolgozas)
+    
+    kiertekeles(elemzes, y, mondatok_becsles)
+
+def kiertekeles(elemzes, y, mondatok_becsles):
+    # Kinyomtatni a mondatok becslésének eredményét
+    print(mondatok_becsles[['mondat','cimke']])
+ 
+    # Konfúziós mátrix felállítása és kinyomtatása
+    print(confusion_matrix(y,elemzes['cimke'], labels=[1, 0]))
+    print("accuracy: ",round(accuracy_score(y,elemzes['cimke'])*100,2))
+    print("precision_positive: ",
+	round(precision_score(y,elemzes['cimke'], 
+	pos_label=1)*100,2))
+    print("recall_positive:",
+	round(recall_score(y,elemzes['cimke'],
+	pos_label=1)*100,2))
+    print("precision_negative: ",
+	round(precision_score(y,elemzes['cimke'], 
+	pos_label=1)*100,0))
+    print("recall_negative:",
+	round(recall_score(y,elemzes['cimke'],
+	pos_label=0)*100,2))
+ 
 def modell_felallitasa():
     # CSV betöltése, adathalmaz felosztása:
     adat = pd.read_csv('feldolgozott_adat.csv')
@@ -50,47 +104,16 @@ def modell_felallitasa():
     elemzes = pd.DataFrame()
     elemzes['szoveg'] = bigram[x]
  
-    """
-    Afinn szótár alkalmazása mondat becslésre:
-    megadja az egyes sorokhoz tartozó szavak szótári értékei alapján számított hangulati értéket, 
-    utána pedig megadja a címkék értékét: 
-    hogyha a vektor 0-nál kisebb értékű, akkor negatív, ellenkező esetben pozitív
-    """
-    # scores = [afn.score(a) for a in elemzes['szoveg']]
-    # sentiment = [1 if score > 0 else 0 for score in scores]
-    # elemzes['vektor'] = scores
-    # elemzes['cimke'] = sentiment
- 
-    # Cimkézés Textblob and Vader segítségével
-    elemzes['vektor'] = elemzes.szoveg.apply(hangulat_textblob)
-    elemzes['cimke'] = elemzes.vektor.apply(cimkezes_textblob)
- 
     # Példa mondatok betöltése, feldolgozása
     mondatok_becsles = pd.DataFrame(pelda_mondatok) 
     mondatok_becsles['mondat'] = mondatok_becsles.apply(feldolgozas)
  
-    # Afinn szótár becslése az példamondatokra
-    # scores = [afn.score(a) for a in mondatok_becsles['mondat']]
-    # sentiment = [1 if score > 0 else 0 for score in scores]
-    # mondatok_becsles['vektor'] = scores
-    # mondatok_becsles['cimke'] = sentiment
- 
-    # Vader, TextBlob alkalmazása mondat becslésére
-    mondatok_becsles['vektor'] = mondatok_becsles.mondat.apply(hangulat_textblob)
-    mondatok_becsles['cimke'] = mondatok_becsles.vektor.apply(cimkezes_textblob)
- 
-    # Kinyomtatni a mondatok becslésének eredményét
-    print(mondatok_becsles[['mondat','cimke']])
- 
-    # Konfúziós mátrix felállítása és kinyomtatása
-    print(confusion_matrix(y,elemzes['cimke'], labels=[1, 0]))
-    print("accuracy: ",round(accuracy_score(y,elemzes['cimke'])*100,2))
-    print("precision: ",
-	round(precision_score(y,elemzes['cimke'], 
-	pos_label=1)*100,2))
-    print("recall:",
-	round(recall_score(y,elemzes['cimke'],
-	pos_label=1)*100,2))
- 
+    print("Afinn eredménye:")
+    afinn(elemzes, y, mondatok_becsles)
+    print("Vader eredménye:")
+    Vader_TextBlob(elemzes, y, mondatok_becsles, cimkezes_vader, hangulat_vader)
+    print("TextBlob eredménye:")
+    Vader_TextBlob(elemzes, y, mondatok_becsles, cimkezes_textblob, hangulat_textblob)
+
 if __name__== "__main__":
     modell_felallitasa()

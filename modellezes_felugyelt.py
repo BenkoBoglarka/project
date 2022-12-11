@@ -41,10 +41,14 @@ def modell_felallitasa():
     print(confusion_matrix(y_tesztelo,elorejelzes,labels=[1, 0]))
     print("accuracy: ",
     round(accuracy_score(y_tesztelo,elorejelzes)*100,2))
-    print("precision: ",
+    print("precision_positive: ",
     round(precision_score(y_tesztelo,elorejelzes, pos_label=1)*100,2))
-    print("recall: ",
+    print("recall_positive: ",
     round(recall_score(y_tesztelo,elorejelzes,pos_label=1)*100,2))
+    print("precision_negative: ",
+    round(precision_score(y_tesztelo,elorejelzes, pos_label=0)*100,2))
+    print("recall_negative: ",
+    round(recall_score(y_tesztelo,elorejelzes,pos_label=0)*100,2))
  
     # Példa mondatok becslése és eredmény kinyomtatása
     mondat_becsles = pd.DataFrame(pelda_mondatok) 

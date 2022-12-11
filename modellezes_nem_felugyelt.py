@@ -100,8 +100,14 @@ def modell_felallitasa():
     # Konfúziós mátrix felállítása és kinyomtatása
     print(confusion_matrix(tesztelo,elemzes['cimke'],labels=[1, 0]))
     print("accuracy: ",round(accuracy_score(tesztelo,elemzes['cimke'])*100,2))
-    print("precision: ",round(precision_score(tesztelo,elemzes['cimke'], pos_label=1)*100,2))
-    print("recall: ",round(recall_score(tesztelo,elemzes['cimke'],pos_label=1)*100,2))
+    print("precision_positive: ",
+    round(precision_score(tesztelo,elemzes['cimke'], pos_label=1)*100,2))
+    print("recall_positive: ",
+    round(recall_score(tesztelo,elemzes['cimke'],pos_label=1)*100,2))
+    print("precision_negative: ",
+    round(precision_score(tesztelo,elemzes['cimke'], pos_label=0)*100,2))
+    print("recall_negative: ",
+    round(recall_score(tesztelo,elemzes['cimke'],pos_label=0)*100,2))
  
     # Példamondatok becslése és az eredmény kinyomtatása
     mondat_becsles = pd.DataFrame(pelda_mondatok) 
